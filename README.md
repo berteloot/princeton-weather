@@ -1,6 +1,6 @@
 # Princeton Weather, Live
 
-This repository holds the code behind my Princeton weather page, live at [altilead.com/princeton-weather](https://altilead.com/princeton-weather). The readings come from an Ecowitt Wittboy Pro (WS90 sensor array, HP2560 console) in my backyard. A Cloudflare Worker reads the Ecowitt API, saves the station's 5-minute readings to a Cloudflare D1 database every hour and updates a summary for each day. The station records and the 7- and 30-day charts are computed from that saved history.
+This repository holds the code behind my Princeton weather page, live at [altilead.com/princeton-weather](https://altilead.com/princeton-weather). The readings come from an Ecowitt Wittboy Pro (WS90 sensor array, HP2560 console) in my backyard. The console pushes each reading to a Cloudflare Worker every minute. The Worker also reads the Ecowitt API for history and as a backup. Every hour it saves the 5-minute readings to a Cloudflare D1 database and updates a daily summary. Station records and the 7- and 30-day charts are computed from that saved history.
 
 ## What's in it
 
@@ -51,6 +51,7 @@ The console can only send plain HTTP, so keep the token long and private. The Wo
 
 Before deploying for your own station, change these:
 - `ARCHIVE_START` in `worker.js`, the first moment worth saving.
+- `CALIBRATED_AT`, `CALIBRATING_FROM` and `REL_OFFSET` in `worker.js`: they correct my station's pressure history from before its altitude was set. Set `REL_OFFSET` to 0 for yours.
 - `CORS_ORIGINS` in `worker.js`, the other sites allowed to read the API.
 - The time zone (`America/New_York`) in `worker.js` and `public/index.html`, plus the page text and the radar map center in `public/index.html`.
 

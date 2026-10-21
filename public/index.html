@@ -372,6 +372,7 @@
     footer { background: var(--ink); color: #fff; padding: 2.4rem 1rem; }
     .foot-inner { max-width: 1180px; margin: 0 auto; display: flex; justify-content: space-between; gap: 1.2rem; flex-wrap: wrap; align-items: center; }
     .foot-inner p { font-weight: 500; max-width: 62ch; }
+    .foot-code { display: inline-block; margin-top: 0.55rem; color: #fff; font-weight: 700; text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; }
     .foot-inner a.cta { background: var(--hot); color: #fff; text-decoration: none; padding: 0.7rem 1.3rem; border-radius: 999px; font-weight: 800; }
     .foot-small { max-width: 1180px; margin: 1.4rem auto 0; font-size: 0.82rem; opacity: 0.6; }
 
@@ -728,9 +729,9 @@
       </div>
       <div>
         <h2>About this station</h2>
-        <p>This is my Ecowitt Wittboy Pro, installed in my Princeton backyard in October 2026 and reporting to ecowitt.net about every minute. Its WS90 sensor array packs temperature, humidity, wind, solar radiation, UV and rain into one solar-charged unit, and its piezo rain gauge works from the tap of each drop. The barometer is in the HP2560_C console indoors, and this page's forecast copies the console's.</p>
+        <p>This is my Ecowitt Wittboy Pro, installed in my Princeton backyard in October 2026. Every minute its HP2560_C console sends the latest readings straight to this page and to ecowitt.net. Its WS90 sensor array packs temperature, humidity, wind, solar radiation, UV and rain into one solar-charged unit, and its piezo rain gauge works from the tap of each drop. The barometer is in the console indoors, and this page's forecast copies the console's.</p>
         <h3>How this page works</h3>
-        <p>The readings come from an Ecowitt Wittboy Pro I installed in my backyard on 19 October 2026. A small program, a Cloudflare Worker, asks Ecowitt for the latest data. Every hour it saves the station's five-minute readings to a database and updates a summary for each day. The records and the 7- and 30-day charts are calculated from that saved history. The radar comes from the National Weather Service. I built it with my own team of AI agents on Claude Code over two days.</p>
+        <p>The readings come from an Ecowitt Wittboy Pro I installed in my backyard on 19 October 2026. Its console sends readings to a small program, a Cloudflare Worker, every minute, so the numbers are usually under a minute old. Ecowitt's service supplies history and steps in if the console stops. Every hour the Worker saves the readings to a database and updates a daily summary. Records and the 7- and 30-day charts come from that history. The radar comes from the National Weather Service. I built it with my own team of AI agents on Claude Code over two days.</p>
         <p class="source"><a href="https://github.com/berteloot/princeton-weather">Read the code on GitHub</a></p>
       </div>
     </section>
@@ -738,7 +739,10 @@
 
   <footer>
     <div class="foot-inner">
-      <p>Through my consulting practice, Altilead, I build live dashboards like this one on a company's own data: campaign results, CRM records and buying signals, as pages a team actually opens.</p>
+      <div>
+        <p>This page runs on live weather data. At Altilead, I build pages like this on your campaign results, CRM records and buying signals.</p>
+        <a class="foot-code" href="https://github.com/berteloot/princeton-weather">My free code on GitHub: build your own Ecowitt page &rarr;</a>
+      </div>
       <a class="cta" href="/#contact">Talk to Altilead</a>
     </div>
     <p class="foot-small">Live readings and a barometer forecast from one Princeton backyard. For the official forecast, see <a href="https://www.weather.gov/phi/">weather.gov</a>. © Stanislas Berteloot · Altilead</p>

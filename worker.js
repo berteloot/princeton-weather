@@ -130,6 +130,21 @@ async function archive(env) {
   return saved;
 }
 
+// The console reported relative pressure equal to absolute until its
+// altitude (35 m) was set at 20:08 UTC on 21 Oct 2026; from then relative is
+// absolute + 4.2 hPa. Older readings get the same offset so the history has
+// no step, and the minutes the calibration was being typed in (absolute +3.3,
+// then relative -4.2) keep no pressure. Ecowitt's own history still holds the
+// raw values, so this is applied on every import.
+// 19:55 is the first 5-minute point whose average takes in the typing.
+const CALIBRATED_AT = 1792613290, CALIBRATING_FROM = 1792612500, REL_OFFSET = 4.2;
+function fixPressure(t, row, cols) {
+  if (t >= CALIBRATED_AT) return;
+  const rel = cols.indexOf("pressure_rel"), abs = cols.indexOf("pressure_abs");
+  if (t >= CALIBRATING_FROM) { row[rel] = null; row[abs] = null; return; }
+  if (row[abs] != null) row[rel] = Math.round((row[abs] + REL_OFFSET) * 10) / 10;
+}
+
 async function archiveRange(db, auth, from, to, touched) {
   const h = await call("history", {
     ...auth, ...METRIC, start_date: nyTime(new Date(from * 1000)), end_date: nyTime(new Date(to * 1000)),
@@ -151,6 +166,7 @@ async function archiveRange(db, auth, from, to, touched) {
     ON CONFLICT(t) DO UPDATE SET ${cols.map((c) => `${c} = excluded.${c}`).join(", ")}`;
   const stmt = db.prepare(sql);
   await db.batch([...rows].map(([t, vals]) => {
+    fixPressure(t, vals, cols);
     const day = nyTime(new Date(t * 1000)).slice(0, 10);
     touched.add(day);
     return stmt.bind(t, day, ...vals);
@@ -420,7 +436,7 @@ async function weather(env) {
     history: history.temp,
     wind_history: history.wind.map(([t, speed, gust]) => [t, speed, gust]),
     today: today(history),
-    forecast: barometer(history.pressure, month, num(o.temperature)),
+    forecast: barometer(history.pressure, month, num(o.temperature), num(p.relative) != null && num(p.absolute) != null ? num(p.relative) - num(p.absolute) : 0),
   };
 }
 
@@ -456,12 +472,12 @@ async function history(auth, days, cycle, fields) {
 // The last 24 hours at 5-minute steps: temperature for the chart and today's
 // high and low, pressure for the forecast, wind for the peak gust and the rose.
 function chart(auth) {
-  return cached("weather-history-v3", HISTORY_SECONDS, async () => {
-    const h = await history(auth, 1, "5min", "outdoor.temperature,pressure.relative,wind.wind_speed,wind.wind_gust,wind.wind_direction");
+  return cached("weather-history-v5", HISTORY_SECONDS, async () => {
+    const h = await history(auth, 1, "5min", "outdoor.temperature,pressure.absolute,wind.wind_speed,wind.wind_gust,wind.wind_direction");
     const speed = new Map(points(h?.data?.wind?.wind_speed)), gust = new Map(points(h?.data?.wind?.wind_gust));
     return {
       temp: points(h?.data?.outdoor?.temperature),
-      pressure: points(h?.data?.pressure?.relative),
+      pressure: despike(points(h?.data?.pressure?.absolute).filter(([t]) => t < CALIBRATING_FROM || t >= CALIBRATED_AT)),
       wind: points(h?.data?.wind?.wind_direction).map(([t, dir]) => [t, speed.get(t) ?? null, gust.get(t) ?? null, dir]),
     };
   }, { temp: [], pressure: [], wind: [] });
@@ -516,9 +532,9 @@ function nyMidnight(now = new Date()) {
 
 // 30 days of pressure at 4-hour steps, for the console's "learning" baseline.
 function pressureMonth(auth) {
-  return cached("weather-pressure-month", BARO_SECONDS, async () => {
-    const h = await history(auth, 30, "4hour", "pressure.relative");
-    return points(h?.data?.pressure?.relative);
+  return cached("weather-pressure-month-abs", BARO_SECONDS, async () => {
+    const h = await history(auth, 30, "4hour", "pressure.absolute");
+    return points(h?.data?.pressure?.absolute);
   }, []);
 }
 
@@ -532,7 +548,10 @@ function pressureMonth(auth) {
 // from today's average against the 30-day average (the console's "learning"
 // graph). Returns null until there are 3 hours of pressure to judge from.
 const RAPID_FALL = -3, TENDENCY = 1, SUSTAINED = 2;
-function barometer(series, month, tempC) {
+// Judged on absolute pressure, which a change to the console's altitude
+// setting does not move; `offset` (relative minus absolute, now) turns the
+// returned series back into the sea-level values the page shows.
+function barometer(series, month, tempC, offset = 0) {
   const all = series.filter(([, v]) => v > 800);
   if (all.length < 2 || all[all.length - 1][0] - all[0][0] < 3 * 3600) return null;
   // The console updates its pressure trend every 30 minutes (manual 5.2.3), so
@@ -577,8 +596,20 @@ function barometer(series, month, tempC) {
     change3h: d3 == null ? null : Math.round(d3 * 10) / 10,
     anomaly,
     learned,
-    pressure: all,
+    pressure: all.map(([t, v]) => [t, Math.round((v + offset) * 10) / 10]),
   };
+}
+
+// Drops a reading more than 2 hPa away from the median of its six neighbours:
+// a calibration typed into the console shows up as a short spike (21 Oct 2026,
+// +3.3 hPa for seven minutes), real pressure does not jump like that.
+function despike(series) {
+  return series.filter(([, v], i) => {
+    const near = series.slice(Math.max(0, i - 3), i).concat(series.slice(i + 1, i + 4)).map(([, x]) => x).sort((a, b) => a - b);
+    if (near.length < 4) return true;
+    const mid = near.length / 2, median = near.length % 2 ? near[Math.floor(mid)] : (near[mid - 1] + near[mid]) / 2;
+    return Math.abs(v - median) <= 2;
+  });
 }
 
 function points(field) {
