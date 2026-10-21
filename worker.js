@@ -131,17 +131,18 @@ async function archive(env) {
 }
 
 // The console reported relative pressure equal to absolute until its
-// altitude (35 m) was set at 20:08 UTC on 21 Oct 2026; from then relative is
-// absolute + 4.2 hPa. Older readings get the same offset so the history has
-// no step, and the minutes the calibration was being typed in (absolute +3.3,
-// then relative -4.2) keep no pressure. Ecowitt's own history still holds the
-// raw values, so this is applied on every import.
-// 19:55 is the first 5-minute point whose average takes in the typing.
-const CALIBRATED_AT = 1792613290, CALIBRATING_FROM = 1792612500, REL_OFFSET = 4.2;
+// altitude was set on 21 Oct 2026: 35 m from 20:08 UTC (+4.2 hPa), then 28 m
+// from 20:46:54 UTC (+3.3 hPa, in line with Trenton, Newark and Apple).
+// Older readings get the final offset so the history has no step, and the
+// minutes the first calibration was being typed in (absolute +3.3, then
+// relative -4.2) keep no pressure. Ecowitt's own history still holds the raw
+// values, so this is applied on every import. 19:55 is the first 5-minute
+// point whose average takes in the typing.
+const CALIBRATED_AT = 1792615614, CALIBRATING_FROM = 1792612500, CALIBRATING_TO = 1792613290, REL_OFFSET = 3.3;
 function fixPressure(t, row, cols) {
   if (t >= CALIBRATED_AT) return;
   const rel = cols.indexOf("pressure_rel"), abs = cols.indexOf("pressure_abs");
-  if (t >= CALIBRATING_FROM) { row[rel] = null; row[abs] = null; return; }
+  if (t >= CALIBRATING_FROM && t < CALIBRATING_TO) { row[rel] = null; row[abs] = null; return; }
   if (row[abs] != null) row[rel] = Math.round((row[abs] + REL_OFFSET) * 10) / 10;
 }
 
@@ -472,12 +473,12 @@ async function history(auth, days, cycle, fields) {
 // The last 24 hours at 5-minute steps: temperature for the chart and today's
 // high and low, pressure for the forecast, wind for the peak gust and the rose.
 function chart(auth) {
-  return cached("weather-history-v5", HISTORY_SECONDS, async () => {
+  return cached("weather-history-v6", HISTORY_SECONDS, async () => {
     const h = await history(auth, 1, "5min", "outdoor.temperature,pressure.absolute,wind.wind_speed,wind.wind_gust,wind.wind_direction");
     const speed = new Map(points(h?.data?.wind?.wind_speed)), gust = new Map(points(h?.data?.wind?.wind_gust));
     return {
       temp: points(h?.data?.outdoor?.temperature),
-      pressure: despike(points(h?.data?.pressure?.absolute).filter(([t]) => t < CALIBRATING_FROM || t >= CALIBRATED_AT)),
+      pressure: despike(points(h?.data?.pressure?.absolute).filter(([t]) => t < CALIBRATING_FROM || t >= CALIBRATING_TO)),
       wind: points(h?.data?.wind?.wind_direction).map(([t, dir]) => [t, speed.get(t) ?? null, gust.get(t) ?? null, dir]),
     };
   }, { temp: [], pressure: [], wind: [] });

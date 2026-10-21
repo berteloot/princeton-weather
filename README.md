@@ -51,7 +51,7 @@ The console can only send plain HTTP, so keep the token long and private. The Wo
 
 Before deploying for your own station, change these:
 - `ARCHIVE_START` in `worker.js`, the first moment worth saving.
-- `CALIBRATED_AT`, `CALIBRATING_FROM` and `REL_OFFSET` in `worker.js`: they correct my station's pressure history from before its altitude was set. Set `REL_OFFSET` to 0 for yours.
+- `CALIBRATED_AT`, `CALIBRATING_FROM`, `CALIBRATING_TO` and `REL_OFFSET` in `worker.js`: they correct my station's pressure history from before its altitude was set. Set `REL_OFFSET` to 0 for yours.
 - `CORS_ORIGINS` in `worker.js`, the other sites allowed to read the API.
 - The time zone (`America/New_York`) in `worker.js` and `public/index.html`, plus the page text and the radar map center in `public/index.html`.
 
