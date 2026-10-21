@@ -1,7 +1,7 @@
 // Worker behind the Princeton weather page (altilead.com/princeton-weather).
-// The page is a static asset in public/; this script answers /api/weather and
-// /api/history (run_worker_first in wrangler.jsonc) and hands every other
-// request back to the assets.
+// The page is a static asset in public/; this script answers /api/weather,
+// /api/history and /api/ingest (run_worker_first in wrangler.jsonc) and hands
+// every other request back to the assets.
 //
 // /api/weather proxies the Ecowitt v3 API for the Princeton station. The keys
 // and the station MAC are Worker secrets (ECOWITT_APP, ECOWITT_API,
@@ -13,20 +13,36 @@
 //
 // An hourly cron (scheduled()) also saves the station's 5-minute history to
 // D1, see archive().
+//
+// The HP2560 console also pushes every reading itself (its Customized server
+// setting, Ecowitt protocol, every 60 seconds) to /api/ingest/<INGEST_TOKEN>,
+// see ingest(). The newest push, when fresh, replaces the live part of the
+// Ecowitt reading on /api/weather, and Ecowitt is then asked less often.
 
 const ECOWITT = "https://api.ecowitt.net/api/v3/device/";
 const CACHE_SECONDS = 60;
 const STALE_SECONDS = 1800;
+// The edge keeps the last Ecowitt body this long, so fresh console pushes can
+// still be laid over it while Ecowitt is down; without a push it is served
+// for STALE_SECONDS only, as before.
+const KEEP_SECONDS = 6 * 3600;
 const HISTORY_SECONDS = 900;
 const BARO_SECONDS = 6 * 3600;
 // Pages on other origins allowed to read /api/weather from the browser:
 // Princeton Live's weather card, and local dev servers.
 const CORS_ORIGINS = /^(https:\/\/princetonlive\.berteloot\.org|http:\/\/(localhost|127\.0\.0\.1)(:\d+)?)$/;
 const METRIC = { temp_unitid: 1, pressure_unitid: 3, wind_speed_unitid: 7, rainfall_unitid: 12, solar_irradiance_unitid: 16 };
+// A push older than this is ignored and the page falls back to Ecowitt alone.
+const PUSH_FRESH_SECONDS = 180;
+// While pushes arrive, the Ecowitt reading (history, rose, forecast, the
+// fields the console does not send) is refreshed this often instead of every
+// CACHE_SECONDS.
+const PUSH_REFRESH_SECONDS = 300;
 
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    if (url.pathname.startsWith("/api/ingest/")) return ingest(request, env, url);
     if (url.pathname !== "/api/weather" && url.pathname !== "/api/history") return env.ASSETS.fetch(request);
     if (request.method !== "GET") return json({ error: "method not allowed" }, 405);
     const origin = request.headers.get("origin") || "";
@@ -34,20 +50,21 @@ export default {
     if (url.pathname === "/api/history") return stationHistory(env, url, cors);
 
     // Ecowitt takes 8 to 12 seconds to answer, so visitors never wait on it:
-    // the last good reading is kept for up to STALE_SECONDS and served at
-    // once, and a reading older than CACHE_SECONDS is refreshed in the
-    // background. Only a cold cache makes a visitor wait.
+    // the last good reading is served at once (up to STALE_SECONDS old, or
+    // KEEP_SECONDS while console pushes arrive), and a reading older than
+    // CACHE_SECONDS is refreshed in the background. Only a cold cache makes a
+    // visitor wait.
     const cache = caches.default;
     const key = new Request(url.origin + "/api/weather", { method: "GET" });
-    const hit = await cache.match(key);
-    if (hit) {
-      const age = Date.now() / 1000 - Number(hit.headers.get("x-fetched-at") || 0);
-      if (age > CACHE_SECONDS) ctx.waitUntil(refresh(env, cache, key).catch((err) => console.error("refresh failed", String(err))));
-      return client(hit, cors);
+    const [hit, push] = await Promise.all([cache.match(key), latestPush(env)]);
+    const age = hit ? Date.now() / 1000 - Number(hit.headers.get("x-fetched-at") || 0) : Infinity;
+    if (hit && (push || age <= STALE_SECONDS)) {
+      if (age > (push ? PUSH_REFRESH_SECONDS : CACHE_SECONDS)) ctx.waitUntil(refresh(env, cache, key).catch((err) => console.error("refresh failed", String(err))));
+      return client(await overlay(hit, push), cors);
     }
 
     try {
-      return client(await refresh(env, cache, key), cors);
+      return client(await overlay(await refresh(env, cache, key), push), cors);
     } catch (err) {
       console.error("weather failed", String(err));
       return withCors(json({ error: "station unavailable" }, 502, 15), cors);
@@ -207,7 +224,7 @@ async function stationHistory(env, url, cors) {
 }
 
 async function refresh(env, cache, key) {
-  const res = json(await weather(env), 200, STALE_SECONDS);
+  const res = json(await weather(env), 200, KEEP_SECONDS);
   res.headers.set("x-fetched-at", String(Math.floor(Date.now() / 1000)));
   await cache.put(key, res.clone());
   return res;
@@ -227,6 +244,141 @@ function withCors(res, cors) {
   res.headers.set("vary", "Origin");
   if (cors) res.headers.set("access-control-allow-origin", cors);
   return res;
+}
+
+// Console uploads (Ecowitt protocol: a form post in imperial units). The path
+// token keeps strangers out, since the console can only post plain HTTP; the
+// PASSKEY the console adds (MD5 of its MAC) is checked when INGEST_PASSKEY is
+// set; values outside physical ranges are dropped. The field names of the
+// last upload, never the values, go to meta `ingest_fields` for debugging.
+const MPH = 1.609344, INHG = 33.8639, INCH = 25.4;
+async function ingest(request, env, url) {
+  const token = url.pathname.slice("/api/ingest/".length);
+  if (!env.INGEST_TOKEN || !env.DB || !sameText(token, env.INGEST_TOKEN)) return new Response("not found", { status: 404 });
+  if (request.method !== "POST") return json({ error: "method not allowed" }, 405);
+  let form;
+  try {
+    form = Object.fromEntries((await request.formData()).entries());
+  } catch {
+    return json({ error: "bad form" }, 400);
+  }
+  if (env.INGEST_PASSKEY && !sameText(String(form.PASSKEY || ""), env.INGEST_PASSKEY)) {
+    console.error("ingest passkey mismatch");
+    return json({ error: "forbidden" }, 403);
+  }
+
+  const f = (...keys) => {
+    for (const k of keys) {
+      const v = Number(form[k]);
+      if (form[k] != null && form[k] !== "" && Number.isFinite(v)) return v;
+    }
+    return null;
+  };
+  const within = (v, lo, hi) => (v != null && v >= lo && v <= hi ? v : null);
+  const round = (v, d = 1) => (v == null ? null : Math.round(v * 10 ** d) / 10 ** d);
+  const times = (v, k) => (v == null ? null : v * k);
+
+  const now = Math.floor(Date.now() / 1000);
+  const sent = Date.parse(String(form.dateutc || "").replace(" ", "T") + "Z") / 1000;
+  const t = Number.isFinite(sent) && Math.abs(now - sent) < 600 ? Math.floor(sent) : now;
+  const tf = f("tempf");
+  const temp = within(round(tf == null ? null : (tf - 32) * 5 / 9), -50, 60);
+  const humidity = within(f("humidity"), 1, 100);
+  const windSpeed = within(round(times(f("windspeedmph"), MPH)), 0, 300);
+  const rain = (piezo, plain) => within(round(times(f(piezo, plain), INCH)), 0, 5000);
+  const raining = f("srain_piezo");
+  const row = {
+    t, temp, feels_like: feelsLike(temp, humidity, windSpeed), dew_point: dewPoint(temp, humidity), humidity,
+    wind_speed: windSpeed, wind_gust: within(round(times(f("windgustmph"), MPH)), 0, 400), wind_dir: within(f("winddir"), 0, 360),
+    wind_dir_avg10: within(f("winddir_avg10m"), 0, 360), vpd_kpa: vpdKpa(temp, humidity), rain_24h: rain("last24hrain_piezo", "last24hrainin"),
+    pressure_rel: within(round(times(f("baromrelin"), INHG)), 870, 1090), pressure_abs: within(round(times(f("baromabsin"), INHG)), 600, 1090),
+    rain_rate: rain("rrain_piezo", "rainratein"), rain_hour: rain("hrain_piezo", "hourlyrainin"), rain_event: rain("erain_piezo", "eventrainin"),
+    rain_day: rain("drain_piezo", "dailyrainin"), rain_week: rain("wrain_piezo", "weeklyrainin"), rain_month: rain("mrain_piezo", "monthlyrainin"),
+    rain_year: rain("yrain_piezo", "yearlyrainin"), raining: raining == null ? null : raining > 0 ? 1 : 0,
+    solar: within(f("solarradiation"), 0, 2000), uvi: within(f("uv"), 0, 20),
+    battery_v: within(f("wh90batt"), 0, 10), capacitor_v: within(f("ws90cap_volt"), 0, 10),
+  };
+  // A reading without a usable temperature is noise; it must not overwrite a
+  // good row from the same second.
+  if (temp == null) return json({ error: "no temperature" }, 400);
+  const cols = Object.keys(row);
+  await env.DB.batch([
+    env.DB.prepare(`INSERT INTO minutes (${cols.join(", ")}) VALUES (${cols.map(() => "?").join(", ")})
+      ON CONFLICT(t) DO UPDATE SET ${cols.slice(1).map((c) => `${c} = excluded.${c}`).join(", ")}`).bind(...cols.map((c) => row[c])),
+    env.DB.prepare("INSERT INTO meta (key, value) VALUES ('ingest_fields', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value")
+      .bind(Object.keys(form).filter((k) => k !== "PASSKEY").sort().join(",")),
+  ]);
+  return new Response("OK");
+}
+
+// The newest console upload as page fields, or null when there is none
+// fresher than PUSH_FRESH_SECONDS (or no table yet).
+async function latestPush(env) {
+  if (!env.DB) return null;
+  try {
+    const r = await env.DB.prepare("SELECT * FROM minutes ORDER BY t DESC LIMIT 1").first();
+    if (!r || Date.now() / 1000 - r.t > PUSH_FRESH_SECONDS) return null;
+    const now = {
+      temp: r.temp, feels_like: r.feels_like, dew_point: r.dew_point, humidity: r.humidity,
+      wind_speed: r.wind_speed, wind_gust: r.wind_gust, wind_dir: r.wind_dir, pressure: r.pressure_rel,
+      wind_dir_avg10: r.wind_dir_avg10, vpd_kpa: r.vpd_kpa, rain_24h: r.rain_24h,
+      raining: r.raining == null ? null : r.raining === 1,
+      rain_rate: r.rain_rate, rain_1h: r.rain_hour, rain_event: r.rain_event, rain_day: r.rain_day,
+      rain_week: r.rain_week, rain_month: r.rain_month, rain_year: r.rain_year,
+      solar: r.solar, uvi: r.uvi, battery_v: r.battery_v, capacitor_v: r.capacitor_v,
+    };
+    for (const k of Object.keys(now)) if (now[k] == null) delete now[k];
+    return { t: r.t, now };
+  } catch (err) {
+    console.error("push read failed", String(err));
+    return null;
+  }
+}
+
+// The Ecowitt body with the console's fresher live values laid over it.
+async function overlay(res, push) {
+  if (!push) return res;
+  const body = await res.json();
+  if (push.t < (body.observed || 0)) return json(body, 200);
+  return json({ ...body, observed: push.t, source: "console", now: { ...body.now, ...push.now } }, 200);
+}
+
+// Vapour pressure deficit in kPa (Tetens saturation pressure).
+function vpdKpa(temp, rh) {
+  if (temp == null || rh == null) return null;
+  const es = 0.6108 * Math.exp((17.27 * temp) / (temp + 237.3));
+  return Math.round(es * (1 - rh / 100) * 1000) / 1000;
+}
+
+// Magnus formula, °C.
+function dewPoint(temp, rh) {
+  if (temp == null || rh == null || rh <= 0) return null;
+  const g = Math.log(rh / 100) + (17.62 * temp) / (243.12 + temp);
+  return Math.round(((243.12 * g) / (17.62 - g)) * 10) / 10;
+}
+
+// As the console computes it: wind chill at or below 10 °C with wind over
+// 4.8 km/h, heat index from 26.7 °C, the air temperature in between.
+function feelsLike(temp, rh, wind) {
+  if (temp == null) return null;
+  let v = temp;
+  if (temp <= 10 && wind != null && wind > 4.8) {
+    const w = wind ** 0.16;
+    v = 13.12 + 0.6215 * temp - 11.37 * w + 0.3965 * temp * w;
+  } else if (temp >= 26.7 && rh != null) {
+    const T = temp * 9 / 5 + 32, R = rh;
+    const hi = -42.379 + 2.04901523 * T + 10.14333127 * R - 0.22475541 * T * R - 0.00683783 * T * T
+      - 0.05481717 * R * R + 0.00122874 * T * T * R + 0.00085282 * T * R * R - 0.00000199 * T * T * R * R;
+    v = ((hi - 32) * 5) / 9;
+  }
+  return Math.round(v * 10) / 10;
+}
+
+function sameText(a, b) {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
 }
 
 function ecowittAuth(env) {

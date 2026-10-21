@@ -8,9 +8,10 @@
   "assets": {
     "directory": "public",
     "binding": "ASSETS",
-    // The Worker answers /api/weather and /api/history; everything else is
+    // The Worker answers /api/weather, /api/history and /api/ingest; the rest is
     // served from public/. Station keys are Worker secrets:
-    // ECOWITT_APP, ECOWITT_API, ECOWITT_MAC.
+    // ECOWITT_APP, ECOWITT_API, ECOWITT_MAC, and for console pushes
+    // (optional) INGEST_TOKEN and INGEST_PASSKEY.
     "run_worker_first": ["/api/*"]
   },
   // Station history, kept by the hourly cron (scheduled() in worker.js).

@@ -8,8 +8,9 @@ This repository holds the code behind my Princeton weather page, live at [altile
 - `worker.js`: the Cloudflare Worker.
   - `/api/weather` proxies the Ecowitt v3 API, trimmed to outdoor readings in metric. It never sends your keys, MAC address or coordinates to the browser.
   - `/api/history` serves hourly and daily history, station records and same-date comparisons from D1.
+  - `/api/ingest/<token>` receives the readings the console pushes itself every minute (see below). While those arrive, `/api/weather` shows them instead of the slower Ecowitt cloud reading.
   - `scheduled()` runs every hour and copies the station's 5-minute history into D1.
-- `migrations/`: the D1 schema (`readings`, `days`, `meta`).
+- `migrations/`: the D1 schema (`readings`, `days`, `meta`, `minutes`).
 - `wrangler.example.jsonc`: the Worker configuration, with placeholders.
 
 The radar layer is the NEXRAD base reflectivity mosaic from the [Iowa Environmental Mesonet](https://mesonet.agron.iastate.edu/). Map tiles are © OpenStreetMap contributors.
@@ -29,6 +30,24 @@ npx wrangler deploy
 ```
 
 For local development, put the same three values in a `.dev.vars` file (git-ignored) and run `npx wrangler dev`.
+
+### Optional: let the console push its readings
+
+Ecowitt consoles and gateways can send every reading straight to your own server ("Customized" upload, Ecowitt protocol). The page then updates every minute without calling the Ecowitt cloud, and keeps updating if that cloud is down.
+
+```sh
+npx wrangler secret put INGEST_TOKEN      # a long random string, e.g. from: openssl rand -hex 16
+npx wrangler secret put INGEST_PASSKEY    # the PASSKEY your console sends: MD5 of its MAC address, uppercase
+```
+
+Then, in the Ecowitt app (Weather Services, Customized) or on the console:
+- Protocol: Ecowitt
+- Server: your domain
+- Path: `/api/ingest/<your INGEST_TOKEN>`
+- Port: 80
+- Interval: 60 seconds
+
+The console can only send plain HTTP, so keep the token long and private. The Worker also checks the PASSKEY and drops values outside physical ranges.
 
 Before deploying for your own station, change these:
 - `ARCHIVE_START` in `worker.js`, the first moment worth saving.
