@@ -1,0 +1,28 @@
+// Copy to wrangler.jsonc and fill in your own values.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "princeton-weather",
+  "compatibility_date": "2026-09-17",
+  "main": "worker.js",
+  "workers_dev": true,
+  "assets": {
+    "directory": "public",
+    "binding": "ASSETS",
+    // The Worker answers /api/weather and /api/history; everything else is
+    // served from public/. Station keys are Worker secrets:
+    // ECOWITT_APP, ECOWITT_API, ECOWITT_MAC.
+    "run_worker_first": ["/api/*"]
+  },
+  // Station history, kept by the hourly cron (scheduled() in worker.js).
+  // Create with `npx wrangler d1 create weather` and paste the id here.
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "weather",
+      "database_id": "YOUR_D1_DATABASE_ID"
+    }
+  ],
+  // :07 past every hour, so the last 5-minute points have reached Ecowitt.
+  "triggers": { "crons": ["7 * * * *"] },
+  "observability": { "enabled": true }
+}

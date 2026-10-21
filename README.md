@@ -1,0 +1,44 @@
+# Princeton Weather, Live
+
+This repository holds the code behind my Princeton weather page, live at [altilead.com/princeton-weather](https://altilead.com/princeton-weather). The readings come from an Ecowitt Wittboy Pro (WS90 sensor array, HP2560 console) in my backyard. A Cloudflare Worker reads the Ecowitt API, saves the station's 5-minute readings to a Cloudflare D1 database every hour and updates a summary for each day. The station records and the 7- and 30-day charts are computed from that saved history.
+
+## What's in it
+
+- `public/index.html`: the page. Plain HTML, CSS and JavaScript, no build step.
+- `worker.js`: the Cloudflare Worker.
+  - `/api/weather` proxies the Ecowitt v3 API, trimmed to outdoor readings in metric. It never sends your keys, MAC address or coordinates to the browser.
+  - `/api/history` serves hourly and daily history, station records and same-date comparisons from D1.
+  - `scheduled()` runs every hour and copies the station's 5-minute history into D1.
+- `migrations/`: the D1 schema (`readings`, `days`, `meta`).
+- `wrangler.example.jsonc`: the Worker configuration, with placeholders.
+
+The radar layer is the NEXRAD base reflectivity mosaic from the [Iowa Environmental Mesonet](https://mesonet.agron.iastate.edu/). Map tiles are © OpenStreetMap contributors.
+
+## Run your own
+
+You need a Cloudflare account, Node.js, and an Ecowitt station with an application key and an API key from ecowitt.net.
+
+```sh
+cp wrangler.example.jsonc wrangler.jsonc
+npx wrangler d1 create weather            # paste the database_id into wrangler.jsonc
+npx wrangler d1 migrations apply weather --remote
+npx wrangler secret put ECOWITT_APP       # Ecowitt application key
+npx wrangler secret put ECOWITT_API       # Ecowitt API key
+npx wrangler secret put ECOWITT_MAC       # your station's MAC address
+npx wrangler deploy
+```
+
+For local development, put the same three values in a `.dev.vars` file (git-ignored) and run `npx wrangler dev`.
+
+Before deploying for your own station, change these:
+- `ARCHIVE_START` in `worker.js`, the first moment worth saving.
+- `CORS_ORIGINS` in `worker.js`, the other sites allowed to read the API.
+- The time zone (`America/New_York`) in `worker.js` and `public/index.html`, plus the page text and the radar map center in `public/index.html`.
+
+## Who built it
+
+I built this with my own team of AI agents on Claude Code over two days in October 2026. Through my consulting practice, Altilead, I build the same kind of live dashboard and data pipeline on a company's own data: campaign results, CRM records, buying signals. If you want one on yours, get in touch through the [Altilead contact section](https://altilead.com/#contact).
+
+## License
+
+MIT, see [LICENSE](LICENSE).
