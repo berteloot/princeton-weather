@@ -13,14 +13,15 @@
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <meta name="theme-color" content="#FF5A1F" />
 
-  <!-- Google Analytics 4. Skipped on localhost and on the workers.dev origin
-       URL, which is public, so only real visits reach the property. -->
+  <!-- Google Analytics 4, for altilead.com only: a copy of this page running
+       anywhere else never loads the tag. Remove this block or use your own
+       measurement ID if you deploy it yourself. -->
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     (function () {
       var host = location.hostname;
-      if (/^(localhost|127\.0\.0\.1|\[?::1\]?)$/.test(host) || /\.workers\.dev$/.test(host)) return;
+      if (host !== "altilead.com") return;
       var tag = document.createElement("script");
       tag.async = true;
       tag.src = "https://www.googletagmanager.com/gtag/js?id=G-WJYWZFKLYC";

@@ -1,7 +1,7 @@
 -- The `daily` view recomputed every day from all readings on each read, so a
 -- year of history meant ~100k rows read per query. `days` holds one row per
 -- Princeton date instead, rewritten by the hourly cron for the days it saved
--- (worker.js, summarizeDays()). Rain is the day's last running total, not its
+-- (worker.js, DAY_SUMMARY). Rain is the day's last running total, not its
 -- maximum, so a midnight reading that still carries yesterday's total cannot
 -- leak into the new day.
 DROP VIEW daily;
