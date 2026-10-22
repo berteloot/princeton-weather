@@ -1383,6 +1383,8 @@
       };
     }
     var pScrub = scrubber($("p-chart")), tScrub = scrubber($("chart")), wScrub = scrubber($("w-chart"));
+    // For the extra boxes the private copy of this page (/station) adds.
+    window.weatherPage = { scrubber: scrubber, cursorSvg: cursorSvg, units: function () { return units; } };
 
     function drawPressure(pts) {
       var svg = $("p-chart");
@@ -1760,6 +1762,7 @@
         units = b.dataset.units;
         try { localStorage.setItem(UNITS_KEY, units); } catch (e) {}
         render();
+        window.dispatchEvent(new Event("weather-units"));
       });
     });
 
