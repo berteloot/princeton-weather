@@ -101,6 +101,7 @@ const ARCHIVE_FIELDS = {
   pressure_rel: ["pressure", "relative"], pressure_abs: ["pressure", "absolute"],
   rain_rate: ["rainfall_piezo", "rain_rate"], rain_daily: ["rainfall_piezo", "daily"], rain_event: ["rainfall_piezo", "event"],
   solar: ["solar_and_uvi", "solar"], uvi: ["solar_and_uvi", "uvi"],
+  temp_in: ["indoor", "temperature"], humidity_in: ["indoor", "humidity"],
 };
 
 async function archive(env) {
@@ -149,7 +150,7 @@ function fixPressure(t, row, cols) {
 async function archiveRange(db, auth, from, to, touched) {
   const h = await call("history", {
     ...auth, ...METRIC, start_date: nyTime(new Date(from * 1000)), end_date: nyTime(new Date(to * 1000)),
-    cycle_type: "5min", call_back: "outdoor,wind,pressure,rainfall_piezo,solar_and_uvi",
+    cycle_type: "5min", call_back: "outdoor,indoor,wind,pressure,rainfall_piezo,solar_and_uvi",
   });
   const cols = Object.keys(ARCHIVE_FIELDS);
   const rows = new Map();
@@ -314,6 +315,7 @@ async function ingest(request, env, url) {
     rain_year: rain("yrain_piezo", "yearlyrainin"), raining: raining == null ? null : raining > 0 ? 1 : 0,
     solar: within(f("solarradiation"), 0, 2000), uvi: within(f("uv"), 0, 20),
     battery_v: within(f("wh90batt"), 0, 10), capacitor_v: within(f("ws90cap_volt"), 0, 10),
+    temp_in: within(round(f("tempinf") == null ? null : (f("tempinf") - 32) * 5 / 9), -10, 50), humidity_in: within(f("humidityin"), 1, 100),
   };
   // A reading without a usable temperature is noise; it must not overwrite a
   // good row from the same second.
