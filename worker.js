@@ -180,15 +180,19 @@ async function archiveRange(db, auth, from, to, touched) {
 // migrations/0002_days_table.sql is the same SELECT over every day). Rain is
 // the day's last running total.
 const DAY_SUMMARY = `INSERT INTO days (day, temp_low, temp_high, temp_avg, humidity_avg, gust_max, wind_avg,
-    rain_mm, rain_rate_max, pressure_low, pressure_high, solar_max, uvi_max, readings)
+    rain_mm, rain_rate_max, pressure_low, pressure_high, solar_max, uvi_max, readings,
+    temp_in_low, temp_in_high, temp_in_avg, humidity_in_low, humidity_in_high, humidity_in_avg)
   SELECT day, MIN(temp), MAX(temp), ROUND(AVG(temp), 1), ROUND(AVG(humidity)), MAX(wind_gust), ROUND(AVG(wind_speed), 1),
     (SELECT r.rain_daily FROM readings r WHERE r.day = readings.day AND r.rain_daily IS NOT NULL ORDER BY r.t DESC LIMIT 1),
-    MAX(rain_rate), MIN(pressure_rel), MAX(pressure_rel), MAX(solar), MAX(uvi), COUNT(*)
+    MAX(rain_rate), MIN(pressure_rel), MAX(pressure_rel), MAX(solar), MAX(uvi), COUNT(*),
+    MIN(temp_in), MAX(temp_in), ROUND(AVG(temp_in), 1), MIN(humidity_in), MAX(humidity_in), ROUND(AVG(humidity_in))
   FROM readings WHERE day = ? GROUP BY day
   ON CONFLICT(day) DO UPDATE SET temp_low = excluded.temp_low, temp_high = excluded.temp_high, temp_avg = excluded.temp_avg,
     humidity_avg = excluded.humidity_avg, gust_max = excluded.gust_max, wind_avg = excluded.wind_avg, rain_mm = excluded.rain_mm,
     rain_rate_max = excluded.rain_rate_max, pressure_low = excluded.pressure_low, pressure_high = excluded.pressure_high,
-    solar_max = excluded.solar_max, uvi_max = excluded.uvi_max, readings = excluded.readings`;
+    solar_max = excluded.solar_max, uvi_max = excluded.uvi_max, readings = excluded.readings,
+    temp_in_low = excluded.temp_in_low, temp_in_high = excluded.temp_in_high, temp_in_avg = excluded.temp_in_avg,
+    humidity_in_low = excluded.humidity_in_low, humidity_in_high = excluded.humidity_in_high, humidity_in_avg = excluded.humidity_in_avg`;
 
 // /api/history: what the saved readings add to the page. Hourly points for the
 // 7-day charts, one row per day (`days`) for the 30-day charts, the season
