@@ -881,6 +881,32 @@
       return { labels: labels, bands: bands };
     }
 
+    // Sky behind the 24-hour chart: indigo at night, pink at sunrise, blue in
+    // the morning and afternoon, pale gold at midday, peach at sunset. Key
+    // colours sit at fixed times around each day's sunrise and sunset and are
+    // blended between, so the edges of the chart get their true colour too.
+    var SKY = { night: [214, 209, 245], dawn: [255, 206, 222], day: [214, 234, 255], noon: [255, 240, 196], dusk: [255, 207, 178] };
+    function skyGradient(id, t0, t1, x, W, padL, padR) {
+      var keys = [], H = 3600000;
+      for (var t = t0 - 86400; t <= t1 + 86400; t += 86400) {
+        var d = nyDate(new Date(t * 1000)), st = sunTimes(d.year, d.month, d.day);
+        keys.push([st.rise - 1.25 * H, SKY.night], [st.rise, SKY.dawn], [st.rise + H, SKY.day], [(st.rise + st.set) / 2, SKY.noon],
+          [st.set - H, SKY.day], [st.set, SKY.dusk], [st.set + 1.25 * H, SKY.night]);
+      }
+      keys.sort(function (a, b) { return a[0] - b[0]; });
+      function at(ms) {
+        for (var i = 1; i < keys.length; i++) if (keys[i][0] >= ms) {
+          var a = keys[i - 1], b = keys[i], f = b[0] > a[0] ? Math.min(1, Math.max(0, (ms - a[0]) / (b[0] - a[0]))) : 0;
+          return a[1].map(function (c, j) { return Math.round(c + (b[1][j] - c) * f); });
+        }
+        return SKY.night;
+      }
+      var a = t0 * 1000, b = t1 * 1000, w = W - padL - padR;
+      var stop = function (ms) { return '<stop offset="' + ((x(ms / 1000) - padL) / w).toFixed(4) + '" stop-color="rgb(' + at(ms).join(",") + ')"/>'; };
+      var inner = keys.filter(function (k) { return k[0] > a && k[0] < b; }).map(function (k) { return stop(k[0]); }).join("");
+      return '<linearGradient id="' + id + '" gradientUnits="userSpaceOnUse" x1="' + padL + '" x2="' + (W - padR) + '" y1="0" y2="0">' + stop(a) + inner + stop(b) + "</linearGradient>";
+    }
+
     // Where a 7- or 30-day chart starts before the saved history does, a dashed
     // line marks the first saved reading and the empty part says so.
     function startNote(first, t0, x, top, bottom) {
@@ -924,9 +950,11 @@
       var area = line + " L" + x(t1).toFixed(1) + " " + (H - padB) + " L" + x(t0).toFixed(1) + " " + (H - padB) + " Z";
 
       var grid = "", ax = axis(mode, t0, t1, W, H, padL, padR, padT, padB, x), labels = ax.labels;
+      var sky = mode === "24h" && !band;
+      if (sky) grid = '<rect x="' + padL + '" y="' + padT + '" width="' + (W - padL - padR) + '" height="' + (H - padT - padB) + '" rx="14" fill="url(#cSky)" />';
       for (var g = 0; g <= 3; g++) {
         var gv = yMin + (yMax - yMin) * g / 3, gy = y(gv);
-        grid += '<line x1="' + padL + '" x2="' + (W - padR) + '" y1="' + gy.toFixed(1) + '" y2="' + gy.toFixed(1) + '" stroke="#EEE9F5" stroke-width="1" vector-effect="non-scaling-stroke" />';
+        grid += '<line x1="' + padL + '" x2="' + (W - padR) + '" y1="' + gy.toFixed(1) + '" y2="' + gy.toFixed(1) + '" stroke="' + (sky ? "rgba(255,255,255,0.75)" : "#EEE9F5") + '" stroke-width="1" vector-effect="non-scaling-stroke" />';
         labels += '<text x="' + (padL - 8) + '" y="' + (gy + 4).toFixed(1) + '" text-anchor="end">' + Math.round(gv) + '°</text>';
       }
       var deg = units === "us" ? "°F" : "°C";
@@ -935,6 +963,7 @@
       var defs = '<defs>' +
           '<linearGradient id="cLine" gradientUnits="userSpaceOnUse" x1="0" x2="0" y1="' + padT + '" y2="' + (H - padB) + '"><stop offset="0" stop-color="#FF5A1F"/><stop offset=".5" stop-color="#FF3D8B"/><stop offset="1" stop-color="#2F7BFF"/></linearGradient>' +
           '<linearGradient id="cFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#FF3D8B" stop-opacity=".35"/><stop offset="1" stop-color="#2F7BFF" stop-opacity=".02"/></linearGradient>' +
+          (sky ? skyGradient("cSky", t0, t1, x, W, padL, padR) : "") +
         '</defs>';
       var body, iHi, iLo, label, when = null, boxW = 160;
       if (mode === "30d") {
