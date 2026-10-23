@@ -555,7 +555,7 @@
         <div class="rain-row">
           <div>
             <div class="val"><span id="r-day">…</span><small class="rain-u">in</small></div>
-            <div class="sub">today · <span id="r-rate">…</span> per hour now</div>
+            <div class="sub" id="r-sub">today</div>
           </div>
           <div class="chip"><span>Week</span><b id="r-week">…</b></div>
           <div class="chip"><span>Month</span><b id="r-month">…</b></div>
@@ -591,7 +591,7 @@
         <h2>Sun &amp; UV</h2>
         <div class="sun-row">
           <div><div class="val"><span id="s-uvi">…</span><small>UV</small></div><div class="sub" id="s-word">&nbsp;</div></div>
-          <div><div class="val"><span id="s-solar">…</span><small>W/m²</small></div><div class="sub">solar radiation</div></div>
+          <div><div class="val"><span id="s-solar">…</span><small>W/m²</small></div><div class="sub" id="s-sky">solar radiation</div></div>
         </div>
         <div class="uv-scale" id="uv-scale" aria-hidden="true"></div>
       </section>
@@ -649,7 +649,7 @@
           <div><span>Solar capacitor</span><b id="pw-cap">…</b></div>
           <div><span>Backup batteries</span><b id="pw-bat">…</b></div>
         </div>
-        <p class="note">My WS90 outdoor sensor runs on a small solar panel that charges a capacitor, with AA batteries as backup.</p>
+        <p class="note" id="pw-note">My WS90 outdoor sensor runs on a small solar panel that charges a capacitor, with AA batteries as backup.</p>
       </section>
 
       <div class="range-bar">
@@ -819,6 +819,25 @@
       return "Find some shade";
     }
     var UV_COLORS = ["#3BB273","#3BB273","#3BB273","#F2C14E","#F2C14E","#F2C14E","#F28C28","#F28C28","#E4572E","#E4572E","#E4572E","#7B3FF2"];
+    // The sun's height over Princeton (degrees) at a moment, from the standard
+    // solar position formulas; good to a fraction of a degree.
+    function sunElevation(ms) {
+      var rad = Math.PI / 180, d = ms / 86400000 + 2440587.5 - 2451545.0;
+      var g = (357.529 + 0.98560028 * d) * rad, q = 280.459 + 0.98564736 * d;
+      var L = (q + 1.915 * Math.sin(g) + 0.020 * Math.sin(2 * g)) * rad, e = (23.439 - 0.00000036 * d) * rad;
+      var dec = Math.asin(Math.sin(e) * Math.sin(L)), ra = Math.atan2(Math.cos(e) * Math.sin(L), Math.cos(L)) / rad;
+      var gmst = (18.697374558 + 24.06570982441908 * d) % 24, ha = ((gmst * 15 + LON - ra) % 360) * rad;
+      return Math.asin(Math.sin(LAT * rad) * Math.sin(dec) + Math.cos(LAT * rad) * Math.cos(dec) * Math.cos(ha)) / rad;
+    }
+    // Solar radiation against what a clear sky gives at this sun height (the
+    // Haurwitz clear-sky model), so the words follow the sky, not the clock.
+    function skyWord(solar, t) {
+      var el = sunElevation((t || Date.now() / 1000) * 1000);
+      if (el < 0) return "solar radiation · the sun is down";
+      if (el < 6 || solar == null) return "solar radiation · sun low on the horizon";
+      var z = Math.sin(el * Math.PI / 180), clear = 1098 * z * Math.exp(-0.057 / z), r = solar / clear;
+      return "solar radiation · " + (r > 0.75 ? "bright, close to a clear sky" : r > 0.4 ? "hazy or broken clouds" : r > 0.15 ? "cloudy" : "heavy overcast");
+    }
     function uvWord(u) {
       if (u == null) return "";
       if (u < 3) return "Low";
@@ -1212,7 +1231,11 @@
           frosts.length ? "Low of " + tempTxt(frosts[0].low) : "No night at or below " + freeze + " since " + (sinceDay > frostStart ? started : "July 1")) +
         row("Frost nights", String(frosts.length), "At or below " + freeze + ", since " + (sinceDay > frostStart ? started : "July 1")) +
         row("Growing degree days", fmt(gdd), "Since " + (sinceDay > gStart ? started : "January 1") + ", base " + (us ? "50 °F" : "10 °C"));
-      $("hs-gdd-note").textContent = "Growing degree days add up how far each day's average temperature rose above " + (us ? "50 °F" : "10 °C") + ". Most garden crops and insects develop in step with them.";
+      var gddSeason = p.month <= 3 || p.month === 12 ? "Winter days rarely add any, and the count starts again on January 1." :
+        p.month <= 5 ? "In spring the count starts to climb, and planting follows it." :
+        p.month <= 8 ? "Summer days add the most." : p.month <= 10 ? "Cooler fall days add less and less; the season's count is nearly done." :
+        "November days add almost nothing; the count starts again on January 1.";
+      $("hs-gdd-note").textContent = "Growing degree days add up how far each day's average temperature rose above " + (us ? "50 °F" : "10 °C") + ". Most garden crops and insects develop in step with them. " + gddSeason;
 
       // This week against the same seven dates a year earlier.
       var weekStart = shiftDay(key, -6), wk = ds.filter(function (d) { return d.day >= weekStart; });
@@ -1477,6 +1500,12 @@
       var calm = Math.round(rose.calm / rose.total * 100);
       svg.innerHTML = rings + spokes + '<circle r="' + (r0 - 2) + '" fill="#fff" stroke="#EEE9F5" />' +
         '<text y="-1" text-anchor="middle" style="font-size:12px">' + calm + '%</text><text y="11" text-anchor="middle" style="font-size:8px;font-weight:700">calm</text>';
+      var top = 0, moving = 0, sum = 0;
+      rose.sectors.forEach(function (sec, i) { if (sec[0] > rose.sectors[top][0]) top = i; moving += sec[0]; sum += sec[0] * (sec[1] || 0); });
+      var share = moving ? Math.round(rose.sectors[top][0] / moving * 100) : 0, avg = moving ? fmt(conv.speed(sum / moving)) + " " + unit : "";
+      $("rose-note").textContent = !moving ? "Calm all day so far: no wind to plot yet." :
+        (calm >= 70 ? "A still day: calm " + calm + "% of the time. When the air moved, it came mostly from the " : "Mostly from the ") +
+        POINTS[top] + " (" + share + "% of the moving air), averaging " + avg + ". Longer spokes mean more often; color shows speed.";
     }
 
     // Sunrise and sunset for Princeton from the standard sunrise equation (the
@@ -1538,6 +1567,17 @@
       return '<circle cx="18" cy="18" r="' + r + '" fill="rgba(20,17,43,0.55)" stroke="rgba(255,255,255,0.6)" stroke-width="1.5" />' +
         (m.lit < 0.01 ? "" : '<path d="M18 3 A' + r + " " + r + " 0 0 " + side + " 18 33 A" + rx.toFixed(2) + " " + r + " 0 0 " + bulge + ' 18 3Z" fill="#FFF3C4" />');
     }
+    function powerNote(cap, bat, t) {
+      var base = "My WS90 outdoor sensor runs on a small solar panel that charges a capacitor, with AA batteries as backup. ";
+      if (cap == null) return base.trim();
+      var day = sunElevation((t || Date.now() / 1000) * 1000) > 0, now;
+      if (cap < 2.4) now = "Right now the capacitor is low, so the batteries are carrying the sensor until the sun is back.";
+      else if (cap >= 4.5) now = day ? "Right now the capacitor is well charged from today's sun, so the batteries are resting." : "Tonight it runs on the charge the capacitor took in today; the batteries are resting.";
+      else now = day ? "Right now the panel is topping the capacitor up." : "The capacitor is drawing down overnight, as it should, and the sun refills it after sunrise.";
+      if (bat != null && bat < 2.4) now += " The backup batteries are getting low.";
+      return base + now;
+    }
+
     function drawDaylight() {
       var now = new Date(), d = nyDate(now);
       var t = sunTimes(d.year, d.month, d.day);
@@ -1689,7 +1729,7 @@
 
       var rd = n.rain_day;
       $("r-day").textContent = rd == null ? "…" : units === "us" ? fmt(conv.rain(rd), 2) : fmt(rd, 1);
-      $("r-rate").textContent = rainTxt(n.rain_rate);
+      $("r-sub").textContent = (n.rain_rate || 0) > 0 ? "today · " + rainTxt(n.rain_rate) + " per hour now" : n.raining ? "today · drizzle now" : "today · dry right now";
       $("r-week").textContent = rainTxt(n.rain_week);
       $("r-month").textContent = rainTxt(n.rain_month);
       $("r-year").textContent = rainTxt(n.rain_year);
@@ -1713,6 +1753,7 @@
       drawVpd(n.vpd_kpa);
       $("pw-cap").textContent = n.capacitor_v == null ? "…" : fmt(n.capacitor_v, 2) + " V";
       $("pw-bat").textContent = n.battery_v == null ? "…" : fmt(n.battery_v, 2) + " V";
+      $("pw-note").textContent = powerNote(n.capacitor_v, n.battery_v, data.observed);
 
       $("p-val").textContent = units === "us" ? fmt(conv.press(n.pressure), 2) : fmt(n.pressure);
       if (n.pressure != null) {
@@ -1723,6 +1764,7 @@
       $("s-uvi").textContent = fmt(n.uvi);
       $("s-word").textContent = uvWord(n.uvi);
       $("s-solar").textContent = fmt(n.solar);
+      $("s-sky").textContent = skyWord(n.solar, data.observed);
       var scale = $("uv-scale"), uv = Math.round(n.uvi || 0);
       scale.innerHTML = UV_COLORS.map(function (c, i) {
         return '<i style="background:' + c + '"' + (i === Math.min(uv, 11) ? ' class="on"' : "") + "></i>";
