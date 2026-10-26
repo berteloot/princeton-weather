@@ -10,7 +10,7 @@ This repository holds the code behind my Princeton weather page, live at [altile
   - `/api/history` serves hourly and daily history, station records and same-date comparisons from D1.
   - `/api/ingest/<token>` receives the readings the console pushes itself every minute (see below). While those arrive, `/api/weather` shows them instead of the slower Ecowitt cloud reading.
   - `scheduled()` runs every hour and copies the station's 5-minute history into D1.
-- `zambretti.js`: the Zambretti forecaster (Negretti & Zambra, 1915) in beteljuice's electronic form, with the daily pressure tide removed before the 3-hour trend is judged.
+- `zambretti.js`: the Zambretti forecaster (Negretti & Zambra, 1915) in beteljuice's electronic form, plus my own removal of the daily pressure cycle before the 3-hour trend is judged (see below).
 - `migrations/`: the D1 schema (`readings`, `days`, `meta`, `minutes`).
 - `wrangler.example.jsonc`: the Worker configuration, with placeholders.
 
@@ -25,9 +25,20 @@ The "Next 12 hours, by Zambretti" card runs the Zambretti forecaster (Negretti &
 - the WS90's 10-minute average wind direction on 16 points, ignored when calm
 - the season, with April to September counted as summer
 
-Before judging the trend I take out the daily pressure tide, a 0.6 hPa wave peaking at 10 AM and 10 PM (Dai & Wang 1999). Without it, a normal late-morning fall reads as worsening weather.
+In worker.js, `barometer()` replays the trend every 30 minutes over the last day. At or below 0 °C, a rainy or stormy outlook shows as snow. To reuse it, import `zambretti`, `tideFree` and `trendOf`.
 
-In worker.js, `barometer()` replays the trend every 30 minutes over the last day. At or below 0 °C, a rainy or stormy outlook shows as snow. To reuse it, import `zambretti`, `tideFree` and `trendOf`. The tide timing is set for America/New_York.
+### My addition: the daily pressure cycle
+
+This is my code (`tide`, `tideFree` in zambretti.js). Neither Zambretti nor beteljuice's version does it.
+
+Hourly Trenton-Mercer (KTTN) reports, Iowa Environmental Mesonet, Oct 2021 to Oct 2026, show pressure swinging daily whatever the weather: a 24-hour wave of 0.61 hPa and a 12-hour wave of 0.56 hPa. On an average day it falls about 2.1 hPa from 10 AM to 4 PM. The 12-hour wave matches the mid-latitude atmospheric tide (Dai & Wang 1999, J. Atmos. Sci.), and the 24-hour wave is mostly daytime heating.
+
+Fitted on Oct 2021 to Mar 2024, scored on later years against rain within 12 hours, cycle removed vs raw:
+
+- Fast-fall warning (3 hPa in 3 hours), Apr 2024 to Oct 2026: 116 days vs 184, rain after 63% vs 49%. A clear gain.
+- Forecast, on the Trenton test years: hours right 76.0% vs 75.0%, dry rain calls 59% vs 61%, but rain caught 30% vs 33%. Fewer false alarms, and a little less rain caught.
+
+The cycle is set for New Jersey (America/New_York). Elsewhere, measure your own: subtract a centered 24-hour mean, average by hour, fit both waves.
 
 ## Run your own
 

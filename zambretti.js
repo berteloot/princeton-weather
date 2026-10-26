@@ -3,15 +3,24 @@
 // trend, the wind direction and the season pick one of 26 forecasts for the
 // next 12 hours. Used by the forecast in worker.js (barometer()).
 //
-// The trend is judged after taking out the atmosphere's daily pressure tide,
-// which lifts pressure toward 10 AM and 10 PM and lowers it toward 4 AM and
-// 4 PM local time whatever the weather does (about 0.3 to 0.6 hPa each way at
-// middle latitudes, Dai & Wang 1999, J. Atmos. Sci.). On 26 Oct 2026 the old
-// alert called a 3.1 hPa fall from 9:30 AM to 12:30 PM at 1024 hPa a storm
-// sign; part of it was the tide and the forecast that day was sunny.
+// Not part of Zambretti, added here: the 3-hour trend is judged after taking
+// out the daily pressure cycle, which rises and falls whatever the weather
+// does. Measured on five years of Trenton airport hourly reports (Oct 2021 to
+// Oct 2026, Iowa Environmental Mesonet): a 24-hour wave of 0.61 hPa peaking
+// at 6.9 h and a 12-hour wave of 0.56 hPa peaking at 10.3 h and 22.3 h local
+// time, so pressure falls about 2.1 hPa from 10 AM to 4 PM on an average day.
+// Scored on those years against rain in the next 12 hours (the cycle fitted
+// on Oct 2021 to Mar 2024, tested on the years after):
+// - the 3 hPa fast-fall alert went out on 116 days instead of 184, and rain
+//   followed on 63% of them instead of 49%;
+// - the forecast's right on 76.0% of hours instead of 75.0%, with fewer rain
+//   forecasts that stayed dry (59% instead of 61%), but it catches less of
+//   the rain (30% instead of 33%): a less alarmist forecast, not a sharper one.
+// On 26 Oct 2026 the old alert called a 3.1 hPa fall from 9:30 AM to 12:30 PM
+// at 1024 hPa a storm sign on a sunny day.
 
 const NY = "America/New_York";
-export const TIDE_HPA = 0.6;
+const CYCLE = [[0.61, 6.9, 24], [0.56, 10.3, 12]]; // hPa, peak hour, period
 export const TREND_HPA = 1.6; // per 3 hours, Zambretti's rising or falling step
 
 export const FORECASTS = ["Settled fine", "Fine weather", "Becoming fine", "Fine, becoming less settled", "Fine, possible showers",
@@ -35,13 +44,13 @@ function nyParts(t) {
     .formatToParts(new Date(t * 1000)).filter((x) => x.type !== "literal").map((x) => [x.type, Number(x.value)]));
 }
 
-// The daily tide's share of pressure at time t (epoch seconds), hPa.
+// The daily cycle's share of pressure at time t (epoch seconds), hPa.
 export function tide(t) {
   const q = nyParts(t), h = q.hour + q.minute / 60;
-  return TIDE_HPA * Math.cos((2 * Math.PI * (h - 10)) / 12);
+  return CYCLE.reduce((a, [amp, peak, period]) => a + amp * Math.cos((2 * Math.PI * (h - peak)) / period), 0);
 }
 
-// Change from (t0, p0) to (t1, p1) with the daily tide taken out.
+// Change from (t0, p0) to (t1, p1) with the daily cycle taken out.
 export function tideFree(t0, p0, t1, p1) {
   return (p1 - tide(t1)) - (p0 - tide(t0));
 }
