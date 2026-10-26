@@ -467,11 +467,11 @@
       <section class="tile forecast">
         <div class="fc-icon" id="fc-icon"></div>
         <div>
-          <h2>Tomorrow by my barometer</h2>
+          <h2>Next 12 hours, by Zambretti</h2>
           <div class="fc-state" id="fc-state">…</div>
-          <p class="fc-sub">My station forecasts the next day from its own barometer alone, the same way its console does.</p>
+          <p class="fc-sub">My station reads its own sea-level pressure, the 3-hour trend, the wind direction and the season, and picks one of the 26 Zambretti forecasts.</p>
           <div class="fc-facts">
-            <div class="fc-fact"><span>3-hour pressure change</span><b id="fc-change">…</b></div>
+            <div class="fc-fact"><span>3-hour change, daily tide removed</span><b id="fc-change">…</b></div>
             <div class="fc-fact"><span>Today versus 30-day average</span><div class="anom" id="fc-anom" aria-hidden="true"></div><b class="small" id="fc-anom-val">…</b></div>
           </div>
           <p class="fc-learn" id="fc-learn"></p>
@@ -746,7 +746,7 @@
       </div>
       <div>
         <h2>About this station</h2>
-        <p>This is my Ecowitt Wittboy Pro, installed in my Princeton backyard in October 2026. Every minute its HP2560_C console sends the latest readings straight to this page and to ecowitt.net. Its WS90 sensor array packs temperature, humidity, wind, solar radiation, UV and rain into one solar-charged unit, and its piezo rain gauge works from the tap of each drop. The barometer is in the console indoors, and this page's forecast copies the console's.</p>
+        <p>This is my Ecowitt Wittboy Pro, installed in my Princeton backyard in October 2026. Every minute its HP2560_C console sends the latest readings straight to this page and to ecowitt.net. Its WS90 sensor array packs temperature, humidity, wind, solar radiation, UV and rain into one solar-charged unit, and its piezo rain gauge works from the tap of each drop. The barometer sits in the console indoors, the wind comes from the WS90, and the forecast follows Negretti &amp; Zambra's 1915 Zambretti method.</p>
         <h3>How this page works</h3>
         <p>The readings come from an Ecowitt Wittboy Pro I installed in my backyard on 19 October 2026. Its console sends readings to a small program, a Cloudflare Worker, every minute, so the numbers are usually under a minute old. Ecowitt's service supplies history and steps in if the console stops. Every hour the Worker saves the readings to a database and updates a daily summary. Records and the 7- and 30-day charts come from that history. The radar comes from the National Weather Service. I built it with <a href="/team">my own team of AI agents</a> on Claude Code over two days.</p>
         <p class="source"><a href="https://github.com/berteloot/princeton-weather">Read the code on GitHub</a></p>
@@ -1322,12 +1322,12 @@
         return;
       }
       var st = STATES[f.state] || STATES.partly;
-      $("fc-state").textContent = st[0];
+      $("fc-state").textContent = f.text || st[0];
       $("fc-icon").innerHTML = icon(st[1]);
-      // The console blinks the storm icon for at most 30 minutes after a rapid fall.
+      // The storm icon blinks for the first 30 minutes of a stormy forecast.
       $("fc-icon").classList.toggle("blink", /storm/.test(f.state) && Boolean(f.since) && Date.now() / 1000 - f.since < 1800);
-      var c = f.change3h;
-      $("fc-change").textContent = c == null ? "…" : pressTxt(c, true) + (c > 1 ? " ↑" : c < -1 ? " ↓" : " →");
+      var c = f.change3h_tide_free != null ? f.change3h_tide_free : f.change3h;
+      $("fc-change").textContent = c == null ? "…" : pressTxt(c, true) + (f.trend === "rising" ? " ↑" : f.trend === "falling" ? " ↓" : " →");
       var a = f.anomaly, lit = a == null ? -1 : Math.max(-5, Math.min(5, Math.round(a))) + 5;
       var bars = "";
       for (var i = 0; i < 11; i++) bars += "<i" + (i === lit ? ' class="on"' : i === 5 ? ' class="mid"' : "") + "></i>";

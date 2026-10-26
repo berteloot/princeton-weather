@@ -8,8 +8,8 @@
 // ECOWITT_MAC) and never reach the browser. The response is trimmed to
 // outdoor readings in metric: no MAC, no coordinates, no indoor data.
 //
-// The forecast copies the Ecowitt console: it comes from the station's own
-// barometer only (see barometer() below).
+// The forecast is the Zambretti forecaster on the station's own barometer and
+// wind (see barometer() below and zambretti.js).
 //
 // An hourly cron (scheduled()) also saves the station's 5-minute history to
 // D1, see archive().
@@ -18,6 +18,7 @@
 // setting, Ecowitt protocol, every 60 seconds) to /api/ingest/<INGEST_TOKEN>,
 // see ingest(). The newest push, when fresh, replaces the live part of the
 // Ecowitt reading on /api/weather, and Ecowitt is then asked less often.
+import { zambretti, tideFree, trendOf } from "./zambretti.js";
 
 const ECOWITT = "https://api.ecowitt.net/api/v3/device/";
 const CACHE_SECONDS = 60;
@@ -48,28 +49,10 @@ export default {
     const origin = request.headers.get("origin") || "";
     const cors = CORS_ORIGINS.test(origin) ? origin : null;
     if (url.pathname === "/api/history") return stationHistory(env, url, cors);
-
-    // Ecowitt takes 8 to 12 seconds to answer, so visitors never wait on it:
-    // the last good reading is served at once (up to STALE_SECONDS old, or
-    // KEEP_SECONDS while console pushes arrive), and a reading older than
-    // CACHE_SECONDS is refreshed in the background. Only a cold cache makes a
-    // visitor wait.
-    const cache = caches.default;
-    const key = new Request(url.origin + "/api/weather", { method: "GET" });
-    const [hit, push] = await Promise.all([cache.match(key), latestPush(env)]);
-    const age = hit ? Date.now() / 1000 - Number(hit.headers.get("x-fetched-at") || 0) : Infinity;
-    if (hit && (push || age <= STALE_SECONDS)) {
-      if (age > (push ? PUSH_REFRESH_SECONDS : CACHE_SECONDS)) ctx.waitUntil(refresh(env, cache, key).catch((err) => console.error("refresh failed", String(err))));
-      return client(await overlay(hit, push), cors);
-    }
-
-    try {
-      return client(await overlay(await refresh(env, cache, key), push), cors);
-    } catch (err) {
-      console.error("weather failed", String(err));
-      return withCors(json({ error: "station unavailable" }, 502, 15), cors);
-    }
+    return serveWeather(env, ctx, url, cors);
   },
+
+
 
   async scheduled(event, env, ctx) {
     ctx.waitUntil(archive(env).then(
@@ -358,11 +341,36 @@ async function latestPush(env) {
   }
 }
 
-// The Ecowitt body with the console's fresher live values laid over it.
-async function overlay(res, push) {
-  if (!push) return res;
-  const body = await res.json();
-  if (push.t < (body.observed || 0)) return json(body, 200);
+// Ecowitt takes 8 to 12 seconds to answer, so visitors never wait on it:
+// the last good reading is served at once (up to STALE_SECONDS old, or
+// KEEP_SECONDS while console pushes arrive), and a reading older than
+// CACHE_SECONDS is refreshed in the background. Only a cold cache makes a
+// visitor wait.
+async function serveWeather(env, ctx, url, cors) {
+  const cache = caches.default;
+  const key = new Request(url.origin + "/api/weather", { method: "GET" });
+  const [hit, push] = await Promise.all([cache.match(key), latestPush(env)]);
+  const age = hit ? Date.now() / 1000 - Number(hit.headers.get("x-fetched-at") || 0) : Infinity;
+  if (hit && (push || age <= STALE_SECONDS)) {
+    if (age > (push ? PUSH_REFRESH_SECONDS : CACHE_SECONDS)) ctx.waitUntil(refresh(env, cache, key).catch((err) => console.error("refresh failed", String(err))));
+    return client(await overlay(hit, push), cors);
+  }
+
+  try {
+    return client(await overlay(await refresh(env, cache, key), push), cors);
+  } catch (err) {
+    console.error("weather failed", String(err));
+    return withCors(json({ error: "station unavailable" }, 502, 15), cors);
+  }
+}
+
+// The Ecowitt body with the console's fresher live values laid over it (and
+// lightning values `lt` from elsewhere, when given).
+async function overlay(res, push, lt) {
+  if (!push && !lt) return res;
+  let body = await res.json();
+  if (lt && body.lightning) body = { ...body, lightning: { ...body.lightning, ...lt } };
+  if (!push || push.t < (body.observed || 0)) return json(body, 200);
   return json({ ...body, observed: push.t, source: "console", now: { ...body.now, ...push.now } }, 200);
 }
 
@@ -443,7 +451,8 @@ async function weather(env) {
     history: history.temp,
     wind_history: history.wind.map(([t, speed, gust]) => [t, speed, gust]),
     today: today(history),
-    forecast: barometer(history.pressure, month, num(o.temperature), num(p.relative) != null && num(p.absolute) != null ? num(p.relative) - num(p.absolute) : 0),
+    forecast: barometer(history.pressure, month, num(o.temperature), num(p.relative) != null && num(p.absolute) != null ? num(p.relative) - num(p.absolute) : 0,
+      num(w.wind_speed) > 1 ? num(w["10_minute_average_wind_direction"]) : null),
   };
 }
 
@@ -545,25 +554,20 @@ function pressureMonth(auth) {
   }, []);
 }
 
-// The Ecowitt console forecast (the station's HP2560_C console; the WS2910
-// manual, section 5.2.2, gives the detail in the same words): six outcomes
-// from the rate of change of pressure, and Snowy in place of Rainy or Stormy at
-// or below 0 °C. The manual gives the 1 hPa tendency step; Ecowitt does not
-// publish the rest, so "sustained" here means the 6-hour change agrees and
-// "rapid" means 3 hPa or more in 3 hours. Like the console, a steady barometer
-// keeps the last outcome, so the series is replayed from its start, seeded
-// from today's average against the 30-day average (the console's "learning"
-// graph). Returns null until there are 3 hours of pressure to judge from.
-const RAPID_FALL = -3, TENDENCY = 1, SUSTAINED = 2;
+// The page's forecast: the Zambretti forecaster (zambretti.js) on this
+// station's own barometer, for the next 12 hours. The 3-hour trend has the
+// daily pressure tide taken out first. Trends are read every 30 minutes and
+// the forecast replayed from the start of the series, so `since` is when the
+// current forecast began. The 30-day average stays as the "today versus usual"
+// gauge. Returns null until there are 3 hours of pressure to judge from.
+//
 // Judged on absolute pressure, which a change to the console's altitude
-// setting does not move; `offset` (relative minus absolute, now) turns the
-// returned series back into the sea-level values the page shows.
-function barometer(series, month, tempC, offset = 0) {
+// setting does not move; `offset` (relative minus absolute, now) gives the
+// sea-level pressure Zambretti reads and the values the page shows. `windDeg`
+// is the 10-minute average wind direction, or null when calm.
+function barometer(series, month, tempC, offset = 0, windDeg = null) {
   const all = series.filter(([, v]) => v > 800);
   if (all.length < 2 || all[all.length - 1][0] - all[0][0] < 3 * 3600) return null;
-  // The console updates its pressure trend every 30 minutes (manual 5.2.3), so
-  // decisions step through readings at least 30 minutes apart; the 5-minute
-  // series still goes back whole for the chart.
   const p = [];
   for (const point of all) if (!p.length || point[0] - p[p.length - 1][0] >= 1800) p.push(point);
   if (p[p.length - 1] !== all[all.length - 1]) p.push(all[all.length - 1]); // always judge the latest reading
@@ -574,33 +578,36 @@ function barometer(series, month, tempC, offset = 0) {
   const anomaly = day != null && base != null ? Math.round((day - base) * 10) / 10 : null;
   const learned = month.length ? Math.min(30, Math.max(1, Math.ceil((now - month[0][0]) / 86400))) : 0;
 
-  // Change over the last `hours`, read by time because Ecowitt's history has
-  // gaps: the reading closest to that time, if one is within 45 minutes.
-  const change = (i, hours) => {
-    const target = p[i][0] - hours * 3600;
+  // The reading closest to 3 hours before p[i] (Ecowitt's history has gaps),
+  // if one is within 45 minutes.
+  const back3 = (i) => {
+    const target = p[i][0] - 3 * 3600;
     let best = null;
     for (let j = 0; j < i; j++) if (best == null || Math.abs(p[j][0] - target) < Math.abs(p[best][0] - target)) best = j;
-    return best != null && Math.abs(p[best][0] - target) <= 2700 ? p[i][1] - p[best][1] : null;
+    return best != null && Math.abs(p[best][0] - target) <= 2700 ? p[best] : null;
   };
 
-  let state = anomaly == null ? "partly" : anomaly >= 3 ? "sunny" : anomaly >= 0 ? "partly" : anomaly > -3 ? "cloudy" : "rainy";
-  let since = p[0][0];
+  let z = null, since = p[0][0], raw = null, free = null;
   for (let i = 1; i < p.length; i++) {
-    const d3 = change(i, 3), d6 = change(i, 6);
-    if (d3 == null) continue;
-    let next = state;
-    if (d3 <= RAPID_FALL) next = "stormy";
-    else if (d3 < -TENDENCY) next = d6 != null && d6 <= -SUSTAINED ? "rainy" : "cloudy";
-    else if (d3 > TENDENCY) next = d6 != null && d6 >= SUSTAINED ? "sunny" : "partly";
-    if (next !== state) { state = next; since = p[i][0]; }
+    const b = back3(i);
+    if (!b) continue;
+    raw = p[i][1] - b[1];
+    free = tideFree(b[0], b[1], p[i][0], p[i][1]);
+    const next = zambretti(p[i][1] + offset, trendOf(free), windDeg, p[i][0]);
+    if (!z || next.index !== z.index) { z = next; since = p[i][0]; }
   }
+  if (!z) return null;
+  let state = z.icon;
   if (tempC != null && tempC <= 0 && (state === "rainy" || state === "stormy")) state = state === "stormy" ? "stormsnow" : "snowy";
-
-  const d3 = change(p.length - 1, 3);
   return {
+    method: "zambretti",
     state,
+    text: z.text,
+    letter: z.letter,
+    trend: trendOf(free),
     since,
-    change3h: d3 == null ? null : Math.round(d3 * 10) / 10,
+    change3h: raw == null ? null : Math.round(raw * 10) / 10,
+    change3h_tide_free: free == null ? null : Math.round(free * 10) / 10,
     anomaly,
     learned,
     pressure: all.map(([t, v]) => [t, Math.round((v + offset) * 10) / 10]),

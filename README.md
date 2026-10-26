@@ -10,10 +10,24 @@ This repository holds the code behind my Princeton weather page, live at [altile
   - `/api/history` serves hourly and daily history, station records and same-date comparisons from D1.
   - `/api/ingest/<token>` receives the readings the console pushes itself every minute (see below). While those arrive, `/api/weather` shows them instead of the slower Ecowitt cloud reading.
   - `scheduled()` runs every hour and copies the station's 5-minute history into D1.
+- `zambretti.js`: the Zambretti forecaster (Negretti & Zambra, 1915) in beteljuice's electronic form, with the daily pressure tide removed before the 3-hour trend is judged.
 - `migrations/`: the D1 schema (`readings`, `days`, `meta`, `minutes`).
 - `wrangler.example.jsonc`: the Worker configuration, with placeholders.
 
 The radar layer is the NEXRAD base reflectivity mosaic from the [Iowa Environmental Mesonet](https://mesonet.agron.iastate.edu/). Map tiles are © OpenStreetMap contributors.
+
+## The forecast: Zambretti method
+
+The "Next 12 hours, by Zambretti" card runs the Zambretti forecaster (Negretti & Zambra, 1915) in beteljuice's electronic form. Four inputs pick one of 26 forecasts, from "Settled fine" to "Stormy, much rain":
+
+- sea-level pressure, from the console barometer plus the console's own offset
+- the 3-hour trend, with 1.6 hPa as the threshold for rising or falling
+- the WS90's 10-minute average wind direction on 16 points, ignored when calm
+- the season, with April to September counted as summer
+
+Before judging the trend I take out the daily pressure tide, a 0.6 hPa wave peaking at 10 AM and 10 PM (Dai & Wang 1999). Without it, a normal late-morning fall reads as worsening weather.
+
+In worker.js, `barometer()` replays the trend every 30 minutes over the last day. At or below 0 °C, a rainy or stormy outlook shows as snow. To reuse it, import `zambretti`, `tideFree` and `trendOf`. The tide timing is set for America/New_York.
 
 ## Run your own
 
