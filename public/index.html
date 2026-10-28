@@ -204,17 +204,12 @@
     @media (max-width: 900px) { .forecast { grid-template-columns: auto 1fr; } .forecast .fc-graph { grid-column: 1 / -1; } }
     @media (max-width: 640px) { .forecast { grid-template-columns: 1fr; } .fc-icon { width: 110px; height: 110px; } }
 
-    /* Row two: today so far, wind rose, daylight. Row four adds VPD; row five the watch and sensor power. */
-    .today { grid-column: span 4; background: var(--hot); color: #fff; }
-    .rose { grid-column: span 4; background: #fff; color: var(--ink); }
-    .daylight { grid-column: span 4; background: linear-gradient(160deg, #C8501E 0%, #C22A68 55%, #5B34C4 100%); color: #fff; }
+    /* Row two: today so far and the wind rose. Row four adds VPD; row five lightning and sensor power. */
+    .today { grid-column: span 6; background: var(--hot); color: #fff; }
+    .rose { grid-column: span 6; background: #fff; color: var(--ink); }
     .vpd { grid-column: span 4; background: #167A44; color: #fff; }
-    .watch { grid-column: span 4; background: #fff; color: var(--ink); border: 3px solid var(--ink); }
-    .watch.frost { background: #CDEBFF; }
-    .watch.heat { background: #FFB347; }
-    .watch.danger { background: #B71C32; color: #fff; border-color: #B71C32; }
-    .power { grid-column: span 4; background: #2A2546; color: #fff; }
-    .lightning { grid-column: span 4; background: #24325F; color: #fff; }
+    .power { grid-column: span 6; background: #2A2546; color: #fff; }
+    .lightning { grid-column: span 6; background: #24325F; color: #fff; }
     .lightning.near { background: #5B1F8F; }
     .lightning h2 { color: var(--sun); opacity: 1; }
     .bolt { width: 44px; height: 44px; flex: none; }
@@ -232,17 +227,13 @@
     .stat-row small { grid-column: 1 / -1; font-weight: 600; font-size: 0.82rem; opacity: 0.95; margin-top: -0.2rem; text-align: right; }
 
     .rose h2 { color: var(--sky); opacity: 1; }
+    .rose-from { display: inline-block; margin-left: 0.4rem; background: var(--ink); color: #fff; padding: 0.15rem 0.6rem; border-radius: 999px; font-size: 0.8rem; letter-spacing: 0.02em; text-transform: none; vertical-align: 1px; }
     #rose { width: 100%; max-width: 240px; display: block; margin: 0 auto; }
     #rose text { font: 800 11px 'Bricolage Grotesque', sans-serif; fill: var(--ink); }
     .rose-legend { display: flex; gap: 4px 10px; justify-content: center; margin-top: 0.5rem; font-size: 0.72rem; font-weight: 700; flex-wrap: wrap; }
     .rose-legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -2px; margin-right: 3px; }
     .note { font-size: 0.82rem; font-weight: 500; line-height: 1.45; opacity: 0.92; margin-top: 0.6rem; }
 
-    #sun-arc { width: 100%; height: 70px; display: block; margin: 0.2rem 0 0.6rem; }
-    .moon-row b { display: inline-flex; align-items: center; gap: 0.45rem; font-size: 1.25rem; }
-    .moon-row b span { font: inherit; opacity: 1; }
-    .moon-icon { width: 30px; height: 30px; flex: none; }
-    .daylight .stat-row { border-color: rgba(255,255,255,0.3); }
 
     .vpd-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.6rem; }
     .vpd-plant { width: 64px; height: 64px; flex: none; }
@@ -251,10 +242,6 @@
     .vpd-scale i.on { opacity: 1; box-shadow: 0 0 0 2px #fff; }
     .vpd-band { font-weight: 800; margin-top: 0.5rem; }
 
-    .watch-row { display: flex; align-items: center; gap: 1rem; }
-    .watch-icon { width: 54px; height: 54px; flex: none; }
-    .watch-msg { font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: clamp(1.3rem, 2.4vw, 1.7rem); line-height: 1.15; }
-    .watch a { color: inherit; }
 
     .power-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
     .power-row div { background: rgba(255,255,255,0.1); border-radius: 16px; padding: 0.7rem 0.9rem; }
@@ -395,7 +382,7 @@
     @media (max-width: 900px) {
       .hero-inner { grid-template-columns: 1fr; }
       .big-temp, .temp-meta { text-align: left; justify-content: flex-start; }
-      .wind, .humid, .feels, .rain, .press, .sun, .dew, .today, .rose, .daylight, .vpd, .watch, .power, .lightning { grid-column: span 12; }
+      .wind, .humid, .feels, .rain, .press, .sun, .dew, .today, .rose, .vpd, .power, .lightning { grid-column: span 12; }
       .rain-row, .rain-row2 { grid-template-columns: 1fr 1fr; }
     }
     @media (max-width: 640px) {
@@ -481,10 +468,10 @@
 
       <section class="tile wind">
         <div>
-          <h2>Wind</h2>
+          <h2>Wind right now</h2>
           <div class="val"><span id="w-speed">…</span><small id="w-unit">mph</small></div>
           <div class="real" id="w-word">&nbsp;</div>
-          <div class="sub">Gusts <span id="w-gust">…</span> · from <span id="w-from">…</span></div>
+          <div class="sub">Gusts <span id="w-gust">…</span> · blowing from <span id="w-from">…</span></div>
         </div>
         <svg class="compass" viewBox="0 0 150 150" role="img" aria-label="Wind direction">
           <circle cx="75" cy="75" r="66" fill="rgba(255,255,255,0.14)" stroke="#fff" stroke-width="3" />
@@ -526,21 +513,10 @@
       </section>
 
       <section class="tile rose">
-        <h2>Wind today</h2>
-        <svg id="rose" viewBox="-130 -130 260 260" role="img" aria-label="Wind rose for today"></svg>
+        <h2>Wind since midnight <span class="rose-from" id="rose-from" hidden></span></h2>
+        <svg id="rose" viewBox="-130 -130 260 260" role="img" aria-label="Wind rose since midnight"></svg>
         <div class="rose-legend" id="rose-legend"></div>
         <p class="note" id="rose-note">Longer spokes mean the wind blew from that direction more often; color shows average speed.</p>
-      </section>
-
-      <section class="tile daylight">
-        <h2>Daylight</h2>
-        <svg id="sun-arc" viewBox="0 0 300 70" aria-hidden="true"></svg>
-        <div class="stat-rows">
-          <div class="stat-row"><span>Sunrise</span><b id="dl-rise">…</b></div>
-          <div class="stat-row"><span>Sunset</span><b id="dl-set">…</b><small id="dl-left"></small></div>
-          <div class="stat-row"><span>Day length</span><b id="dl-len">…</b><small id="dl-diff"></small></div>
-          <div class="stat-row moon-row"><span>Moon</span><b><svg class="moon-icon" id="dl-moon-icon" viewBox="0 0 36 36" aria-hidden="true"></svg><span id="dl-moon">…</span></b><small id="dl-moon-note"></small></div>
-        </div>
       </section>
 
       <section class="tile rain">
@@ -613,15 +589,6 @@
         <div class="vpd-scale" id="v-scale" aria-hidden="true"></div>
         <div class="vpd-band" id="v-band">&nbsp;</div>
         <p class="note">VPD is the gap between how much water the air could hold at this temperature and how much it actually holds, measured in kPa. The higher it is, the faster your plants lose water through their leaves.</p>
-      </section>
-
-      <section class="tile watch" id="watch">
-        <h2>Frost and heat watch</h2>
-        <div class="watch-row">
-          <svg class="watch-icon" id="w-icon" viewBox="0 0 48 48" aria-hidden="true"></svg>
-          <div class="watch-msg" id="w-msg">…</div>
-        </div>
-        <p class="note">These are my own rules applied to my station's readings, not an official warning; for those, see <a href="https://www.weather.gov/phi/">weather.gov</a>.</p>
       </section>
 
       <section class="tile lightning" id="lightning">
@@ -1483,6 +1450,7 @@
       }).join("") + "<span>" + unit + "</span>";
       var rings = '<circle r="110" fill="none" stroke="#EEE9F5" stroke-width="1.5" /><circle r="70" fill="none" stroke="#EEE9F5" stroke-width="1.5" />' +
         '<text y="-116" text-anchor="middle">N</text><text x="122" y="4" text-anchor="middle">E</text><text y="126" text-anchor="middle">S</text><text x="-122" y="4" text-anchor="middle">W</text>';
+      $("rose-from").hidden = true;
       if (!rose || !rose.total) {
         svg.innerHTML = rings + '<text y="4" text-anchor="middle" style="font-size:12px">No wind readings yet today.</text>';
         return;
@@ -1502,9 +1470,18 @@
         '<text y="-1" text-anchor="middle" style="font-size:12px">' + calm + '%</text><text y="11" text-anchor="middle" style="font-size:8px;font-weight:700">calm</text>';
       var top = 0, moving = 0, sum = 0;
       rose.sectors.forEach(function (sec, i) { if (sec[0] > rose.sectors[top][0]) top = i; moving += sec[0]; sum += sec[0] * (sec[1] || 0); });
+      // Next to the heading, where the wind came from, in words: the 16 spokes
+      // pooled into 8 compass points (each takes half of its two neighbours),
+      // and a second direction when the day's wind came from two opposite-ish
+      // sides (at least 60% of the main one's share, three points or more away).
+      var NAMES = ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"];
+      var s8 = NAMES.map(function (_, j) { var c = rose.sectors; return c[2 * j][0] + (c[(2 * j + 15) % 16][0] + c[2 * j + 1][0]) / 2; });
+      var m1 = 0; s8.forEach(function (v, j) { if (v > s8[m1]) m1 = j; });
+      var m2 = -1; s8.forEach(function (v, j) { var d = Math.min(Math.abs(j - m1), 8 - Math.abs(j - m1)); if (d >= 3 && v >= 0.6 * s8[m1] && (m2 < 0 || v > s8[m2])) m2 = j; });
+      if (moving) { $("rose-from").textContent = "Mostly from the " + NAMES[m1] + (m2 >= 0 ? " and " + NAMES[m2] : ""); $("rose-from").hidden = false; }
       var share = moving ? Math.round(rose.sectors[top][0] / moving * 100) : 0, avg = moving ? fmt(conv.speed(sum / moving)) + " " + unit : "";
       $("rose-note").textContent = !moving ? "Calm all day so far: no wind to plot yet." :
-        (calm >= 70 ? "A still day: calm " + calm + "% of the time. When the air moved, it came mostly from the " : "Mostly from the ") +
+        (calm >= 70 ? "A still day: calm " + calm + "% of the time since midnight. When the air moved, it came mostly from the " : "Since midnight, mostly from the ") +
         POINTS[top] + " (" + share + "% of the moving air), averaging " + avg + ". Longer spokes mean more often; color shows speed.";
     }
 
@@ -1530,43 +1507,6 @@
       return p;
     }
 
-    // Moon phase like the console's: new and full moons from Meeus, Astronomical
-    // Algorithms ch. 49 (accurate to minutes), the age between them for the phase
-    // name, and the lit fraction from that age.
-    function moonPhaseJde(k, full) {
-      var rad = Math.PI / 180, T = k / 1236.85;
-      var jde = 2451550.09766 + 29.530588861 * k + 0.00015437 * T * T - 0.00000015 * T * T * T + 0.00000000073 * T * T * T * T;
-      var E = 1 - 0.002516 * T - 0.0000074 * T * T;
-      var M = (2.5534 + 29.1053567 * k - 0.0000014 * T * T) * rad;
-      var Mp = (201.5643 + 385.81693528 * k + 0.0107582 * T * T + 0.00001238 * T * T * T) * rad;
-      var F = (160.7108 + 390.67050284 * k - 0.0016118 * T * T - 0.00000227 * T * T * T) * rad;
-      var Om = (124.7746 - 1.56375588 * k + 0.0020672 * T * T) * rad;
-      var c = full ? [-0.40614, 0.17302, 0.01614, 0.01043, 0.00734, -0.00515, 0.00209] : [-0.4072, 0.17241, 0.01608, 0.01039, 0.00739, -0.00514, 0.00208];
-      return jde + c[0] * Math.sin(Mp) + c[1] * E * Math.sin(M) + c[2] * Math.sin(2 * Mp) + c[3] * Math.sin(2 * F) +
-        c[4] * E * Math.sin(Mp - M) + c[5] * E * Math.sin(Mp + M) + c[6] * E * E * Math.sin(2 * M) -
-        0.00111 * Math.sin(Mp - 2 * F) - 0.00057 * Math.sin(Mp + 2 * F) + 0.00056 * E * Math.sin(2 * Mp + M) -
-        0.00042 * Math.sin(3 * Mp) + 0.00042 * E * Math.sin(M + 2 * F) + 0.00038 * E * Math.sin(M - 2 * F) -
-        0.00024 * E * Math.sin(2 * Mp - M) - 0.00017 * Math.sin(Om);
-    }
-    var jdToMs = function (jd) { return (jd - 2440587.5) * 86400000; };
-    function moonNow(ms) {
-      var jd = ms / 86400000 + 2440587.5, k = Math.floor((jd - 2451550.09766) / 29.530588861) - 1;
-      while (moonPhaseJde(k + 1, false) <= jd) k++;
-      var prevNew = moonPhaseJde(k, false), nextNew = moonPhaseJde(k + 1, false);
-      var fullThis = moonPhaseJde(k + 0.5, true), full = fullThis > jd ? fullThis : moonPhaseJde(k + 1.5, true);
-      var frac = (jd - prevNew) / (nextNew - prevNew), w = 1 / 29.53; // a day either side of an exact phase
-      // New and full by their own times (full rarely falls at exactly half a lunation); quarters by the fraction.
-      var name = jd - prevNew < 1 || nextNew - jd < 1 ? "New moon" : Math.abs(jd - fullThis) < 1 ? "Full moon" : Math.abs(frac - 0.25) < w ? "First quarter" :
-        Math.abs(frac - 0.75) < w ? "Last quarter" : frac < 0.25 ? "Waxing crescent" : jd < fullThis ? "Waxing gibbous" : frac < 0.75 ? "Waning gibbous" : "Waning crescent";
-      return { frac: frac, lit: (1 - Math.cos(2 * Math.PI * frac)) / 2, name: name, nextFull: jdToMs(full) };
-    }
-    // Lit disc as seen from the northern hemisphere: waxing lights the right side.
-    function moonSvg(m) {
-      var r = 15, rx = Math.abs(1 - 2 * m.lit) * r, right = m.frac < 0.5;
-      var side = right ? 1 : 0, bulge = m.lit > 0.5 ? (right ? 1 : 0) : (right ? 0 : 1); // gibbous: terminator bulges into the dark half
-      return '<circle cx="18" cy="18" r="' + r + '" fill="rgba(20,17,43,0.55)" stroke="rgba(255,255,255,0.6)" stroke-width="1.5" />' +
-        (m.lit < 0.01 ? "" : '<path d="M18 3 A' + r + " " + r + " 0 0 " + side + " 18 33 A" + rx.toFixed(2) + " " + r + " 0 0 " + bulge + ' 18 3Z" fill="#FFF3C4" />');
-    }
     function powerNote(cap, bat, t) {
       var base = "My WS90 outdoor sensor runs on a small solar panel that charges a capacitor, with AA batteries as backup. ";
       if (cap == null) return base.trim();
@@ -1576,56 +1516,6 @@
       else now = day ? "Right now the panel is topping the capacitor up." : "The capacitor is drawing down overnight, as it should, and the sun refills it after sunrise.";
       if (bat != null && bat < 2.4) now += " The backup batteries are getting low.";
       return base + now;
-    }
-
-    function drawDaylight() {
-      var now = new Date(), d = nyDate(now);
-      var t = sunTimes(d.year, d.month, d.day);
-      var yd = new Date(Date.UTC(d.year, d.month - 1, d.day) - 86400000);
-      var ty = sunTimes(yd.getUTCFullYear(), yd.getUTCMonth() + 1, yd.getUTCDate());
-      var len = Math.round((t.set - t.rise) / 60000), lenY = Math.round((ty.set - ty.rise) / 60000), diff = len - lenY;
-      $("dl-rise").textContent = clockTime.format(new Date(t.rise));
-      $("dl-set").textContent = clockTime.format(new Date(t.set));
-      $("dl-len").textContent = Math.floor(len / 60) + " h " + (len % 60) + " min";
-      $("dl-diff").textContent = diff === 0 ? "" : Math.abs(diff) + " min " + (diff < 0 ? "shorter" : "longer") + " than yesterday";
-      // Countdown: daylight left while the sun is up, otherwise time to the next sunrise.
-      var span = function (ms) { var m = Math.ceil(ms / 60000); return (m >= 60 ? Math.floor(m / 60) + " h " : "") + (m % 60) + " min"; };
-      if (now < t.rise) $("dl-left").textContent = "Sunrise in " + span(t.rise - now);
-      else if (now < t.set) $("dl-left").textContent = span(t.set - now) + " of daylight left";
-      else {
-        var tm = new Date(Date.UTC(d.year, d.month - 1, d.day) + 86400000);
-        $("dl-left").textContent = "Sunrise in " + span(sunTimes(tm.getUTCFullYear(), tm.getUTCMonth() + 1, tm.getUTCDate()).rise - now);
-      }
-      var f = (now.getTime() - t.rise) / (t.set - t.rise), up = f >= 0 && f <= 1, a = Math.PI * (1 - Math.max(0, Math.min(1, f)));
-      var cx = 150 + 130 * Math.cos(a), cy = 64 - 56 * Math.sin(a);
-      var moon = moonNow(now.getTime());
-      $("dl-moon").textContent = moon.name;
-      $("dl-moon-icon").innerHTML = moonSvg(moon);
-      $("dl-moon-note").textContent = Math.round(moon.lit * 100) + "% lit · Next full moon " +
-        new Intl.DateTimeFormat("en-US", { weekday: "short", month: "short", day: "numeric", timeZone: NY }).format(new Date(moon.nextFull));
-      $("sun-arc").innerHTML = '<path d="M20 64 A130 56 0 0 1 280 64" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="2.5" stroke-dasharray="5 6" />' +
-        '<line x1="8" x2="292" y1="64" y2="64" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" />' +
-        (up ? '<circle cx="' + cx.toFixed(1) + '" cy="' + cy.toFixed(1) + '" r="11" fill="#FFE27A" stroke="#fff" stroke-width="3" />' : "");
-    }
-
-    // Frost and heat watch: the page's own rules on the live readings, not an
-    // official warning. Frost: 2 °C or below, or 5 °C or below between 4 PM and
-    // 9 AM with the dew point at or below 0 °C and wind under 10 km/h. Heat: the
-    // NWS heat-index bands, caution from 32 °C feels-like, danger from 39 °C.
-    var WATCH_ICONS = {
-      calm: '<circle cx="24" cy="24" r="20" fill="#1E9E5A" /><path d="M14 25l7 7 13-15" fill="none" stroke="#fff" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" />',
-      frost: '<g stroke="#2F7BFF" stroke-width="3.5" stroke-linecap="round"><path d="M24 4v40M6.7 14l34.6 20M6.7 34l34.6-20" /><path d="M19 8l5 5 5-5M19 40l5-5 5 5M8 20l7-1-2-6M40 28l-7 1 2 6M8 28l7 1-2 6M40 20l-7-1 2-6" fill="none" /></g>',
-      heat: '<circle cx="24" cy="24" r="10" fill="#FF5A1F" /><g stroke="#FF5A1F" stroke-width="3.5" stroke-linecap="round"><path d="M24 3v6M24 39v6M3 24h6M39 24h6M9 9l4 4M35 35l4 4M9 39l4-4M35 13l4-4" /></g>',
-    };
-    WATCH_ICONS.danger = WATCH_ICONS.heat.replace(/#FF5A1F/g, "#FFE27A"); // the orange sun disappears on the red card
-    function watchState(n) {
-      var hour = nyDate(new Date((data.observed || Date.now() / 1000) * 1000)).hour;
-      if (n.feels_like != null && n.feels_like >= 39) return ["danger", "danger", "Heat danger: it feels like 39 °C (103 °F) or more."];
-      if (n.feels_like != null && n.feels_like >= 32) return ["heat", "heat", "Heat caution: it feels like 32 °C (90 °F) or more."];
-      var night = hour >= 16 || hour < 9;
-      if (n.temp != null && (n.temp <= 2 || (night && n.temp <= 5 && n.dew_point != null && n.dew_point <= 0 && (n.wind_speed == null || n.wind_speed < 10))))
-        return ["frost", "frost", "Frost possible. Protect tender plants."];
-      return ["calm", "calm", "No frost or heat risk right now."];
     }
 
     // VPD: commonly used growing bands in kPa.
@@ -1737,19 +1627,14 @@
       $("r-24h").textContent = rainTxt(n.rain_24h);
       $("r-event").textContent = rainTxt(n.rain_event);
 
-      var w = watchState(n), raining = n.raining || (n.rain_rate || 0) > 0;
-      $("watch").className = "tile watch " + w[0];
-      $("w-icon").innerHTML = WATCH_ICONS[w[1]];
-      $("w-msg").textContent = w[2];
-      var warning = w[0] === "calm" ? "" : w[2].split(":")[0].split(".")[0];
-      var pill = w[0] === "danger" ? warning : lightningNear(data.lightning) ? "Lightning nearby" : raining ? "Raining now" : warning;
+      var raining = n.raining || (n.rain_rate || 0) > 0;
+      var pill = lightningNear(data.lightning) ? "Lightning nearby" : raining ? "Raining now" : "";
       drawLightning(data.lightning);
       $("t-alert").hidden = !pill;
       $("t-alert").textContent = pill;
 
       drawToday(data.today, n);
       drawRose(data.today && data.today.rose);
-      drawDaylight();
       drawVpd(n.vpd_kpa);
       $("pw-cap").textContent = n.capacitor_v == null ? "…" : fmt(n.capacitor_v, 2) + " V";
       $("pw-bat").textContent = n.battery_v == null ? "…" : fmt(n.battery_v, 2) + " V";
@@ -1788,7 +1673,6 @@
       $("clock-time").textContent = clockTime.format(d);
       $("clock-date").textContent = clockDate.format(d) + " · ET";
       $("clock").setAttribute("datetime", d.toISOString());
-      drawDaylight(); // keeps the sunset countdown and sun position moving even if the station is offline
       setTimeout(tick, 60000 - (d.getTime() % 60000) + 50);
     }
 
