@@ -517,12 +517,17 @@ function today(history) {
     s.n++; s.sum += speed;
   }
   const gusts = wind.filter(([, , g]) => g != null).map(([t, , g]) => [t, g]);
+  // The day's wind, one reading per 10 minutes, for the strip under the rose
+  // that shows when the wind blew from where: [t, speed km/h, direction °].
+  const steps = new Map();
+  for (const [t, speed, , dir] of wind) if (!steps.has(Math.floor(t / 600))) steps.set(Math.floor(t / 600), [t, speed == null ? null : Math.round(speed * 10) / 10, dir]);
   return {
     since: start,
     high: pick(temp, (a, b) => a > b),
     low: pick(temp, (a, b) => a < b),
     gust: pick(gusts, (a, b) => a > b),
     rose: { calm, total: calm + sectors.reduce((a, s) => a + s.n, 0), sectors: sectors.map((s) => [s.n, s.n ? Math.round((s.sum / s.n) * 10) / 10 : 0]) },
+    track: [...steps.values()],
   };
 }
 

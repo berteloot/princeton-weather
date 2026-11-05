@@ -204,12 +204,22 @@
     @media (max-width: 900px) { .forecast { grid-template-columns: auto 1fr; } .forecast .fc-graph { grid-column: 1 / -1; } }
     @media (max-width: 640px) { .forecast { grid-template-columns: 1fr; } .fc-icon { width: 110px; height: 110px; } }
 
-    /* Row two: today so far and the wind rose. Row four adds VPD; row five lightning and sensor power. */
+    /* Row two: today so far and the wind rose. Row four adds VPD; row five the watch, lightning and sensor power. */
     .today { grid-column: span 6; background: var(--hot); color: #fff; }
     .rose { grid-column: span 6; background: #fff; color: var(--ink); }
     .vpd { grid-column: span 4; background: #167A44; color: #fff; }
-    .power { grid-column: span 6; background: #2A2546; color: #fff; }
-    .lightning { grid-column: span 6; background: #24325F; color: #fff; }
+    .power { grid-column: span 4; background: #2A2546; color: #fff; }
+    .lightning { grid-column: span 4; background: #24325F; color: #fff; }
+    .watch { grid-column: span 4; background: #fff; color: var(--ink); border: 3px solid var(--ink); }
+    .watch.frost { background: #CDEBFF; }
+    .watch.freeze { background: #1F3A73; color: #fff; border-color: #1F3A73; }
+    .watch.heat { background: #FFB347; }
+    .watch.danger { background: #B71C32; color: #fff; border-color: #B71C32; }
+    .watch-row { display: flex; align-items: center; gap: 1rem; }
+    .watch-icon { width: 54px; height: 54px; flex: none; }
+    .watch-msg { font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: clamp(1.3rem, 2.4vw, 1.7rem); line-height: 1.15; }
+    .watch-season { display: inline-block; font-size: 0.75rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; padding: 0.15rem 0.6rem; border-radius: 999px; background: rgba(20,17,43,0.08); margin-bottom: 0.7rem; }
+    .watch.freeze .watch-season, .watch.danger .watch-season { background: rgba(255,255,255,0.18); }
     .lightning.near { background: #5B1F8F; }
     .lightning h2 { color: var(--sun); opacity: 1; }
     .bolt { width: 44px; height: 44px; flex: none; }
@@ -228,8 +238,19 @@
 
     .rose h2 { color: var(--sky); opacity: 1; }
     .rose-from { display: inline-block; margin-left: 0.4rem; background: var(--ink); color: #fff; padding: 0.15rem 0.6rem; border-radius: 999px; font-size: 0.8rem; letter-spacing: 0.02em; text-transform: none; vertical-align: 1px; }
-    #rose { width: 100%; max-width: 240px; display: block; margin: 0 auto; }
-    #rose text { font: 800 11px 'Bricolage Grotesque', sans-serif; fill: var(--ink); }
+    #rose { width: 100%; max-width: 230px; display: block; margin: 0 auto; }
+    #rose text, #rose-track text { font: 800 11px 'Bricolage Grotesque', sans-serif; fill: var(--ink); }
+    #rose .ring-label { font-size: 9px; font-weight: 700; fill: #6E6A85; }
+    .rose-calm { max-width: 320px; margin: 0.4rem auto 0; font-size: 0.75rem; font-weight: 700; }
+    .rose-calm .rc-bar { display: flex; gap: 2px; height: 8px; }
+    .rose-calm .rc-bar span { display: block; border-radius: 4px; }
+    .rose-calm .rc-move { background: #4A4560; } .rose-calm .rc-still { background: #D9D5E3; }
+    .rose-calm .rc-lab { display: flex; justify-content: space-between; margin-top: 3px; color: #4A4560; }
+    .rose-track-head { display: flex; justify-content: space-between; gap: 0.5rem; margin: 0.8rem 0 0.1rem; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.04em; }
+    .rose-track-head span:first-child { text-transform: uppercase; color: #6E6A85; }
+    .rose-track-head span:last-child { font-weight: 700; letter-spacing: 0; text-align: right; }
+    #rose-track { width: 100%; display: block; overflow: visible; touch-action: pan-y; }
+    #rose-track text { font-size: 9px; font-weight: 700; fill: #6E6A85; }
     .rose-legend { display: flex; gap: 4px 10px; justify-content: center; margin-top: 0.5rem; font-size: 0.72rem; font-weight: 700; flex-wrap: wrap; }
     .rose-legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -2px; margin-right: 3px; }
     .note { font-size: 0.82rem; font-weight: 500; line-height: 1.45; opacity: 0.92; margin-top: 0.6rem; }
@@ -382,7 +403,7 @@
     @media (max-width: 900px) {
       .hero-inner { grid-template-columns: 1fr; }
       .big-temp, .temp-meta { text-align: left; justify-content: flex-start; }
-      .wind, .humid, .feels, .rain, .press, .sun, .dew, .today, .rose, .vpd, .power, .lightning { grid-column: span 12; }
+      .wind, .humid, .feels, .rain, .press, .sun, .dew, .today, .rose, .vpd, .watch, .power, .lightning { grid-column: span 12; }
       .rain-row, .rain-row2 { grid-template-columns: 1fr 1fr; }
     }
     @media (max-width: 640px) {
@@ -515,8 +536,11 @@
       <section class="tile rose">
         <h2>Wind since midnight <span class="rose-from" id="rose-from" hidden></span></h2>
         <svg id="rose" viewBox="-130 -130 260 260" role="img" aria-label="Wind rose since midnight"></svg>
+        <div class="rose-calm" id="rose-calm"></div>
+        <div class="rose-track-head"><span>When, through the day</span><span id="rose-hover" aria-live="polite"></span></div>
+        <svg id="rose-track" viewBox="0 0 320 124" role="img" aria-label="Wind direction through the day, one dot per 10 minutes"></svg>
         <div class="rose-legend" id="rose-legend"></div>
-        <p class="note" id="rose-note">Longer spokes mean the wind blew from that direction more often; color shows average speed.</p>
+        <p class="note" id="rose-note">Bigger spokes mean the wind blew from that direction more often; color shows average speed.</p>
       </section>
 
       <section class="tile rain">
@@ -589,6 +613,16 @@
         <div class="vpd-scale" id="v-scale" aria-hidden="true"></div>
         <div class="vpd-band" id="v-band">&nbsp;</div>
         <p class="note">VPD is the gap between how much water the air could hold at this temperature and how much it actually holds, measured in kPa. The higher it is, the faster your plants lose water through their leaves.</p>
+      </section>
+
+      <section class="tile watch" id="watch">
+        <h2>Frost and heat watch</h2>
+        <span class="watch-season" id="w-season">…</span>
+        <div class="watch-row">
+          <svg class="watch-icon" id="w-icon" viewBox="0 0 48 48" aria-hidden="true"></svg>
+          <div class="watch-msg" id="w-msg">…</div>
+        </div>
+        <p class="note" id="w-note">&nbsp;</p>
       </section>
 
       <section class="tile lightning" id="lightning">
@@ -707,7 +741,7 @@
     </div>
 
     <section class="about">
-      <img class="about-photo" src="ws90-princeton.webp" alt="My Ecowitt WS90 sensor array on its pole in my Princeton backyard" width="900" height="1200" loading="lazy" decoding="async" />
+      <img class="about-photo" src="ws90-princeton.webp" alt="My Ecowitt WS90 sensor array and a second sensor in its radiation shield, on the pole in my Princeton backyard" width="900" height="1200" loading="lazy" decoding="async" />
       <div class="badge" aria-hidden="true">
         <svg width="40" height="40" viewBox="0 0 40 40"><circle cx="20" cy="20" r="8" fill="#FFC93C" /><g stroke="#FFC93C" stroke-width="3.5" stroke-linecap="round"><path d="M20 3v5M20 32v5M3 20h5M32 20h5M8 8l3.5 3.5M28.5 28.5 32 32M8 32l3.5-3.5M28.5 11.5 32 8" /></g></svg>
       </div>
@@ -1433,56 +1467,132 @@
       for (var i = 0; i < BEAUFORT.length; i++) if (k < BEAUFORT[i][0]) return { force: i, name: BEAUFORT[i][1] };
     }
 
-    // Wind rose: one spoke per 16 compass sectors, length from how often the wind
-    // blew from there since midnight, colour from its average speed, binned on
-    // the Beaufort scale (forces 1, 2, 3, 4, then 5 and above).
-    var ROSE_BINS = [[6, "#9AD7FF", "Light air"], [12, "#2F7BFF", "Light breeze"], [20, "#12C2B0", "Gentle breeze"],
-      [29, "#FFC93C", "Moderate breeze"], [Infinity, "#FF3D8B", "Fresh breeze or more"]];
-    function roseColor(kmh) { var k = Math.round(kmh); for (var i = 0; i < ROSE_BINS.length; i++) if (k < ROSE_BINS[i][0]) return ROSE_BINS[i][1]; }
-    function drawRose(rose) {
-      var svg = $("rose"), legend = $("rose-legend");
-      // Legend ranges from the published Beaufort table in each unit (the mph
-      // table is rounded on its own, so it is not a conversion of the km/h one).
-      var edges = units === "us" ? [1, 4, 8, 13, 19] : [1, 6, 12, 20, 29], unit = units === "us" ? "mph" : "km/h";
-      legend.innerHTML = ROSE_BINS.map(function (b, i) {
-        var lo = edges[i], hi = i + 1 < edges.length ? edges[i + 1] - 1 : null;
-        return '<span><i style="background:' + b[1] + '"></i>' + b[2] + " " + (hi == null ? lo + "+" : lo + "–" + hi) + "</span>";
-      }).join("") + "<span>" + unit + "</span>";
-      var rings = '<circle r="110" fill="none" stroke="#EEE9F5" stroke-width="1.5" /><circle r="70" fill="none" stroke="#EEE9F5" stroke-width="1.5" />' +
-        '<text y="-116" text-anchor="middle">N</text><text x="122" y="4" text-anchor="middle">E</text><text y="126" text-anchor="middle">S</text><text x="-122" y="4" text-anchor="middle">W</text>';
+    // Wind rose since midnight (Stan, 5 Nov 2026, redrawn to chart best
+    // practice): 8 compass sectors (16 split a part-day of light wind into
+    // slivers), spoke area rather than length in proportion to how often the
+    // wind came from there (length grows with the square root, so a sector
+    // twice as frequent looks twice as big, not four times), one labelled ring
+    // for scale, calm shown as its own bar instead of a number in the hole, and
+    // under it a strip of the day, one dot per 10 minutes, height for direction,
+    // so a turn of the wind shows. Colour is the average speed on the Beaufort
+    // scale (forces 1, 2, 3, 4, then 5 and above), one blue from light to dark
+    // (an ordinal ramp, checked for contrast on white), and the key lists only
+    // the forces that occurred.
+    var ROSE_BINS = [[6, "#86b6ef", "Light air"], [12, "#3987e5", "Light breeze"], [20, "#256abf", "Gentle breeze"],
+      [29, "#184f95", "Moderate breeze"], [Infinity, "#0d366b", "Fresh breeze or more"]];
+    function roseBin(kmh) { var k = Math.round(kmh); for (var i = 0; i < ROSE_BINS.length; i++) if (k < ROSE_BINS[i][0]) return i; }
+    var PTS8 = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
+    var NAMES8 = ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"];
+    function drawRose(rose, track, since) {
+      var svg = $("rose"), legend = $("rose-legend"), unit = units === "us" ? "mph" : "km/h", used = {};
+      var R = 104, r0 = 12;
+      var frame = '<circle r="' + R + '" fill="none" stroke="#EEE9F5" stroke-width="1.5" />' +
+        '<text y="-114" text-anchor="middle">N</text><text x="120" y="4" text-anchor="middle">E</text><text y="123" text-anchor="middle">S</text><text x="-120" y="4" text-anchor="middle">W</text>';
       $("rose-from").hidden = true;
+      $("rose-calm").innerHTML = "";
+      var moving = 0, sum = 0;
+      if (rose && rose.total) rose.sectors.forEach(function (sec) { moving += sec[0]; sum += sec[0] * (sec[1] || 0); });
       if (!rose || !rose.total) {
-        svg.innerHTML = rings + '<text y="4" text-anchor="middle" style="font-size:12px">No wind readings yet today.</text>';
-        return;
+        svg.innerHTML = frame + '<text y="4" text-anchor="middle" style="font-size:12px">No wind readings yet today.</text>';
+      } else {
+        // 16 sectors pooled into 8: each takes its own and half of its two neighbours.
+        var c = rose.sectors;
+        var s8 = PTS8.map(function (_, j) {
+          var a = c[2 * j], b = c[(2 * j + 15) % 16], d = c[2 * j + 1], n = a[0] + (b[0] + d[0]) / 2;
+          return [n, n ? (a[0] * a[1] + (b[0] * b[1] + d[0] * d[1]) / 2) / n : 0];
+        });
+        var share = s8.map(function (x) { return x[0] / rose.total; }), maxShare = Math.max.apply(null, share);
+        var rad = function (p) { return r0 + Math.sqrt(p / maxShare) * (R - r0); };
+        var pt = function (r, deg) { var q = deg * Math.PI / 180; return (r * Math.sin(q)).toFixed(1) + " " + (-r * Math.cos(q)).toFixed(1); };
+        var ring = "";
+        if (maxShare > 0) {
+          var nice = [0.05, 0.1, 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.75], rv = null;
+          nice.forEach(function (v) { if (v <= maxShare * 0.9) rv = v; });
+          if (rv) {
+            var rr = rad(rv);
+            ring = '<circle r="' + rr.toFixed(1) + '" fill="none" stroke="#DCD6E8" stroke-width="1" stroke-dasharray="3 3" />' +
+              '<text class="ring-label" x="' + (rr * 0.71 + 3).toFixed(1) + '" y="' + (-rr * 0.71 - 3).toFixed(1) + '">' + Math.round(rv * 100) + "%</text>";
+          }
+        }
+        var spokes = "";
+        s8.forEach(function (sec, j) {
+          if (!sec[0]) return;
+          var r = rad(share[j]), a0 = j * 45 - 20, a1 = j * 45 + 20, bin = roseBin(sec[1]);
+          used[bin] = true;
+          spokes += '<path d="M' + pt(r0, a0) + "L" + pt(r, a0) + "A" + r.toFixed(1) + " " + r.toFixed(1) + " 0 0 1 " + pt(r, a1) + "L" + pt(r0, a1) +
+            "A" + r0 + " " + r0 + " 0 0 0 " + pt(r0, a0) + 'Z" fill="' + ROSE_BINS[bin][1] + '" stroke="#fff" stroke-width="2" stroke-linejoin="round"><title>From the ' + NAMES8[j] + ": " +
+            Math.round(share[j] * 100) + "% of the time, averaging " + fmt(conv.speed(sec[1])) + " " + unit + "</title></path>";
+        });
+        svg.innerHTML = frame + ring + spokes;
+        var calm = Math.round(rose.calm / rose.total * 100);
+        $("rose-calm").innerHTML = '<div class="rc-bar">' + (100 - calm ? '<span class="rc-move" style="width:' + (100 - calm) + '%"></span>' : "") +
+          (calm ? '<span class="rc-still" style="width:' + calm + '%"></span>' : "") + '</div><div class="rc-lab"><span>Moving ' + (100 - calm) + "%</span><span>Calm " + calm + "%</span></div>";
+        // Next to the heading, where the wind came from, in words, and a second
+        // direction when the day's wind came from two opposite-ish sides (at
+        // least 60% of the main one's share, three points or more away).
+        var m1 = 0; s8.forEach(function (v, j) { if (v[0] > s8[m1][0]) m1 = j; });
+        var m2 = -1; s8.forEach(function (v, j) { var d = Math.min(Math.abs(j - m1), 8 - Math.abs(j - m1)); if (d >= 3 && v[0] >= 0.6 * s8[m1][0] && (m2 < 0 || v[0] > s8[m2][0])) m2 = j; });
+        if (moving) { $("rose-from").textContent = "Mostly from the " + NAMES8[m1] + (m2 >= 0 ? " and " + NAMES8[m2] : ""); $("rose-from").hidden = false; }
+        var avg = moving ? fmt(conv.speed(sum / moving)) + " " + unit : "";
+        $("rose-note").textContent = !moving ? "Calm all day so far: no wind to plot yet." :
+          "Calm " + calm + "% of the time since midnight. When the air moved, it came mostly from the " + NAMES8[m1] + " (" + Math.round(share[m1] * 100) +
+          "% of the time), averaging " + avg + ". Bigger spokes mean more often (the dashed ring marks a share of the time); color shows speed; the strip shows when.";
       }
-      var max = Math.max.apply(null, rose.sectors.map(function (x) { return x[0]; })) || 1;
-      var r0 = 22, spokes = "";
-      rose.sectors.forEach(function (sec, i) {
-        if (!sec[0]) return;
-        var r = r0 + (sec[0] / max) * (108 - r0);
-        var a0 = (i * 22.5 - 9) * Math.PI / 180, a1 = (i * 22.5 + 9) * Math.PI / 180;
-        var pt = function (rad, a) { return (rad * Math.sin(a)).toFixed(1) + " " + (-rad * Math.cos(a)).toFixed(1); };
-        spokes += '<path d="M' + pt(r0, a0) + "L" + pt(r, a0) + "A" + r.toFixed(1) + " " + r.toFixed(1) + " 0 0 1 " + pt(r, a1) + "L" + pt(r0, a1) + "A" + r0 + " " + r0 + ' 0 0 0 ' + pt(r0, a0) + 'Z" fill="' + roseColor(sec[1]) + '" stroke="#fff" stroke-width="1.5"><title>' +
-          POINTS[i] + ": " + Math.round(sec[0] / rose.total * 100) + "%, " + fmt(conv.speed(sec[1])) + " " + unit + "</title></path>";
+      drawTrack(track || [], since, used);
+      var edges = units === "us" ? [1, 4, 8, 13, 19] : [1, 6, 12, 20, 29];
+      var keys = ROSE_BINS.map(function (bin, i) {
+        if (!used[i]) return "";
+        var lo = edges[i], hi = i + 1 < edges.length ? edges[i + 1] - 1 : null;
+        return '<span><i style="background:' + bin[1] + '"></i>' + bin[2] + " " + (hi == null ? lo + "+" : lo + "–" + hi) + "</span>";
+      }).join("");
+      legend.innerHTML = keys ? keys + "<span>" + unit + "</span>" : "";
+    }
+
+    // The strip: midnight to midnight across, direction down (N at the top and
+    // again at the bottom, E, S and W between), a dot per 10 minutes coloured
+    // by speed, calm as grey ticks on their own row. Hover or touch reads one out.
+    function drawTrack(track, since, used) {
+      var svg = $("rose-track"), x0 = 26, x1 = 312, y0 = 6, y1 = 90, yc = 104;
+      var day = since || (Date.now() / 1000 - 86400);
+      var X = function (t) { return x0 + Math.min(1, Math.max(0, (t - day) / 86400)) * (x1 - x0); };
+      var Y = function (d) { return y0 + (d % 360) / 360 * (y1 - y0); };
+      var g = "";
+      ["N", "E", "S", "W", "N"].forEach(function (lab, i) {
+        var y = y0 + i * (y1 - y0) / 4;
+        g += '<line x1="' + x0 + '" x2="' + x1 + '" y1="' + y + '" y2="' + y + '" stroke="#EEE9F5" stroke-width="1" />' +
+          '<text x="' + (x0 - 6) + '" y="' + (y + 3) + '" text-anchor="end">' + lab + "</text>";
       });
-      var calm = Math.round(rose.calm / rose.total * 100);
-      svg.innerHTML = rings + spokes + '<circle r="' + (r0 - 2) + '" fill="#fff" stroke="#EEE9F5" />' +
-        '<text y="-1" text-anchor="middle" style="font-size:12px">' + calm + '%</text><text y="11" text-anchor="middle" style="font-size:8px;font-weight:700">calm</text>';
-      var top = 0, moving = 0, sum = 0;
-      rose.sectors.forEach(function (sec, i) { if (sec[0] > rose.sectors[top][0]) top = i; moving += sec[0]; sum += sec[0] * (sec[1] || 0); });
-      // Next to the heading, where the wind came from, in words: the 16 spokes
-      // pooled into 8 compass points (each takes half of its two neighbours),
-      // and a second direction when the day's wind came from two opposite-ish
-      // sides (at least 60% of the main one's share, three points or more away).
-      var NAMES = ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"];
-      var s8 = NAMES.map(function (_, j) { var c = rose.sectors; return c[2 * j][0] + (c[(2 * j + 15) % 16][0] + c[2 * j + 1][0]) / 2; });
-      var m1 = 0; s8.forEach(function (v, j) { if (v > s8[m1]) m1 = j; });
-      var m2 = -1; s8.forEach(function (v, j) { var d = Math.min(Math.abs(j - m1), 8 - Math.abs(j - m1)); if (d >= 3 && v >= 0.6 * s8[m1] && (m2 < 0 || v > s8[m2])) m2 = j; });
-      if (moving) { $("rose-from").textContent = "Mostly from the " + NAMES[m1] + (m2 >= 0 ? " and " + NAMES[m2] : ""); $("rose-from").hidden = false; }
-      var share = moving ? Math.round(rose.sectors[top][0] / moving * 100) : 0, avg = moving ? fmt(conv.speed(sum / moving)) + " " + unit : "";
-      $("rose-note").textContent = !moving ? "Calm all day so far: no wind to plot yet." :
-        (calm >= 70 ? "A still day: calm " + calm + "% of the time since midnight. When the air moved, it came mostly from the " : "Since midnight, mostly from the ") +
-        POINTS[top] + " (" + share + "% of the moving air), averaging " + avg + ". Longer spokes mean more often; color shows speed.";
+      g += '<text x="' + (x0 - 6) + '" y="' + (yc + 3) + '" text-anchor="end">calm</text>';
+      [[0, "12 AM"], [6, "6 AM"], [12, "noon"], [18, "6 PM"], [24, "12 AM"]].forEach(function (h, i) {
+        var x = x0 + h[0] / 24 * (x1 - x0);
+        g += '<line x1="' + x + '" x2="' + x + '" y1="' + y0 + '" y2="' + (yc + 4) + '" stroke="#F4F1F9" stroke-width="1" />' +
+          '<text x="' + x + '" y="122" text-anchor="' + (i === 0 ? "start" : i === 4 ? "end" : "middle") + '">' + h[1] + "</text>";
+      });
+      var pts = track.filter(function (p) { return p[1] != null && p[2] != null; }), dots = "";
+      pts.forEach(function (p) {
+        var x = X(p[0]).toFixed(1);
+        if (Math.round(p[1]) < 1) { dots += '<rect x="' + (x - 1) + '" y="' + (yc - 4) + '" width="2" height="8" rx="1" fill="#C9C4D6" />'; return; }
+        var bin = roseBin(p[1]); used[bin] = true;
+        dots += '<circle cx="' + x + '" cy="' + Y(p[2]).toFixed(1) + '" r="3" fill="' + ROSE_BINS[bin][1] + '" stroke="#fff" stroke-width="1" />';
+      });
+      svg.innerHTML = g + dots + '<line id="rt-guide" y1="' + y0 + '" y2="' + (yc + 4) + '" stroke="#14112B" stroke-width="1" opacity="0" />' +
+        '<rect x="' + x0 + '" y="0" width="' + (x1 - x0) + '" height="' + (yc + 8) + '" fill="transparent" id="rt-hit" />';
+      var hover = $("rose-hover"), guide = $("rt-guide"), unit = units === "us" ? "mph" : "km/h";
+      var timeFmt = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", hour: "numeric", minute: "2-digit" });
+      hover.textContent = pts.length ? "" : "No readings yet";
+      var show = function (e) {
+        if (!pts.length) return;
+        var m = svg.getScreenCTM(); if (!m) return;
+        var q = svg.createSVGPoint(); q.x = e.clientX; q.y = e.clientY; q = q.matrixTransform(m.inverse());
+        var best = pts[0];
+        pts.forEach(function (p) { if (Math.abs(X(p[0]) - q.x) < Math.abs(X(best[0]) - q.x)) best = p; });
+        guide.setAttribute("x1", X(best[0])); guide.setAttribute("x2", X(best[0])); guide.setAttribute("opacity", "0.35");
+        hover.textContent = timeFmt.format(new Date(best[0] * 1000)) + " · " + (Math.round(best[1]) < 1 ? "calm" :
+          "from the " + POINTS[Math.round(best[2] / 22.5) % 16] + ", " + fmt(conv.speed(best[1])) + " " + unit);
+      };
+      var hide = function () { guide.setAttribute("opacity", "0"); hover.textContent = ""; };
+      var hit = $("rt-hit");
+      hit.addEventListener("pointermove", show); hit.addEventListener("pointerdown", show); hit.addEventListener("pointerleave", hide);
     }
 
     // Sunrise and sunset for Princeton from the standard sunrise equation (the
@@ -1516,6 +1626,63 @@
       else now = day ? "Right now the panel is topping the capacitor up." : "The capacitor is drawing down overnight, as it should, and the sun refills it after sunrise.";
       if (bat != null && bat < 2.4) now += " The backup batteries are getting low.";
       return base + now;
+    }
+
+    // Frost and heat watch, from the station's own readings and what matters
+    // in the season. Frost season (Sep 15 to May 15, Princeton's first and last
+    // frosts fall in October and April): frost for plants at 2 °C or below, or
+    // 5 °C or below between 4 PM and 9 AM with the dew point at or below 0 °C
+    // and wind under 10 km/h, since frost forms on the ground before the sensor
+    // reads freezing. Winter (Dec to Feb): freezing at 0 °C, hard freeze at
+    // -2.2 °C (28 °F, the NWS hard-freeze line). Summer (Jun to Aug) and any
+    // other time it is hot: the NWS heat-index bands, caution from 32 °C
+    // feels-like, danger from 39 °C.
+    var WATCH_ICONS = {
+      calm: '<circle cx="24" cy="24" r="20" fill="#1E9E5A" /><path d="M14 25l7 7 13-15" fill="none" stroke="#fff" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" />',
+      frost: '<g stroke="#2F7BFF" stroke-width="3.5" stroke-linecap="round"><path d="M24 4v40M6.7 14l34.6 20M6.7 34l34.6-20" /><path d="M19 8l5 5 5-5M19 40l5-5 5 5M8 20l7-1-2-6M40 28l-7 1 2 6M8 28l7 1-2 6M40 20l-7-1 2-6" fill="none" /></g>',
+      heat: '<circle cx="24" cy="24" r="10" fill="#FF5A1F" /><g stroke="#FF5A1F" stroke-width="3.5" stroke-linecap="round"><path d="M24 3v6M24 39v6M3 24h6M39 24h6M9 9l4 4M35 35l4 4M9 39l4-4M35 13l4-4" /></g>',
+      leaf: '<path d="M10 40C10 20 22 8 42 8c0 20-12 32-32 32z" fill="#1E9E5A" /><path d="M10 40L30 20" stroke="#fff" stroke-width="3" stroke-linecap="round" />',
+      thermo: '<rect x="19" y="4" width="10" height="28" rx="5" fill="none" stroke="#1E9E5A" stroke-width="3.5" /><circle cx="24" cy="36" r="8" fill="#1E9E5A" /><path d="M24 14v20" stroke="#1E9E5A" stroke-width="4" stroke-linecap="round" />',
+    };
+    WATCH_ICONS.freeze = WATCH_ICONS.frost.replace(/#2F7BFF/g, "#CDEBFF"); // light flake on the navy card
+    WATCH_ICONS.danger = WATCH_ICONS.heat.replace(/#FF5A1F/g, "#FFE27A"); // the orange sun disappears on the red card
+    function watchSeason(d) {
+      var md = d.month * 100 + d.day;
+      return d.month === 12 || d.month <= 2 ? "winter" : d.month >= 6 && d.month <= 8 ? "summer" : md >= 915 || md <= 515 ? "frost" : "mild";
+    }
+    // [card, icon, message, note]
+    function watchState(n) {
+      var d = nyDate(new Date((data.observed || Date.now() / 1000) * 1000)), season = watchSeason(d);
+      var us = units === "us", th = function (c, f) { return us ? f + " °F" : c + " °C"; };
+      var fl = n.feels_like, t = n.temp;
+      if (fl != null && fl >= 39) return ["danger", "danger", "Heat danger: it feels like " + tempTxt(fl) + ". Stay cool and drink water.", "Heat index from my station's temperature and humidity; danger from " + th(39, 103) + " (NWS heat-index bands)."];
+      if (fl != null && fl >= 32) return ["heat", "heat", "Heat caution: it feels like " + tempTxt(fl) + ". Take it easy in the sun.", "Heat index from my station's temperature and humidity; caution from " + th(32, 90) + ", danger from " + th(39, 103) + "."];
+      if (season === "winter") {
+        var wnote = "Winter: freezing at " + th(0, 32) + ", hard freeze at " + th(-2.2, 28) + ", read from my station.";
+        if (t != null && t <= -2.2) return ["freeze", "freeze", "Hard freeze: " + tempTxt(t) + ". Protect outdoor taps and exposed pipes.", wnote];
+        if (t != null && t <= 0) return ["frost", "frost", "Freezing: " + tempTxt(t) + ". Wet paths may be icy.", wnote];
+        return ["calm", "thermo", "Above freezing right now: " + tempTxt(t) + ".", wnote];
+      }
+      if (season === "frost") {
+        var fnote = "Frost season: frost on the ground when it's " + th(2, 36) + " or colder, or " + th(5, 41) + " or colder after 4 PM with dry air and little wind. The grass gets colder than my sensor, which sits well above it.";
+        var night = d.hour >= 16 || d.hour < 9;
+        if (t != null && t <= -2.2) return ["freeze", "freeze", "Hard freeze: " + tempTxt(t) + ". Tender plants won't make it uncovered.", fnote];
+        if (t != null && (t <= 2 || (night && t <= 5 && n.dew_point != null && n.dew_point <= 0 && (n.wind_speed == null || n.wind_speed < 10))))
+          return ["frost", "frost", "Frost possible. Protect tender plants.", fnote];
+        return ["calm", "leaf", "No frost risk right now.", fnote];
+      }
+      if (season === "summer") return ["calm", "calm", "No heat risk right now: it feels like " + tempTxt(fl) + ".", "Summer: heat caution from " + th(32, 90) + " feels-like, danger from " + th(39, 103) + " (NWS heat-index bands), from my station's temperature and humidity."];
+      return ["calm", "calm", "No frost or heat risk right now.", "Between seasons: frost is unlikely and heat is mild. This box watches for both, from my station's readings."];
+    }
+    var WATCH_SEASON_NAMES = { winter: "Winter: freeze watch", frost: "Frost season", summer: "Summer: heat watch", mild: "Between seasons" };
+    function drawWatch(n) {
+      var w = watchState(n), d = nyDate(new Date((data.observed || Date.now() / 1000) * 1000));
+      $("watch").className = "tile watch " + w[0];
+      $("w-icon").innerHTML = WATCH_ICONS[w[1]];
+      $("w-msg").textContent = w[2];
+      $("w-note").textContent = w[3];
+      $("w-season").textContent = WATCH_SEASON_NAMES[watchSeason(d)];
+      return w;
     }
 
     // VPD: commonly used growing bands in kPa.
@@ -1619,7 +1786,10 @@
 
       var rd = n.rain_day;
       $("r-day").textContent = rd == null ? "…" : units === "us" ? fmt(conv.rain(rd), 2) : fmt(rd, 1);
-      $("r-sub").textContent = (n.rain_rate || 0) > 0 ? "today · " + rainTxt(n.rain_rate) + " per hour now" : n.raining ? "today · drizzle now" : "today · dry right now";
+      // Raining now means rain is falling: the rain rate. The console's rain
+      // flag stays on while the piezo sensor is still wet after the rain stops
+      // (5 Nov 2026: on at 11:30 with the rate at 0 since before then).
+      $("r-sub").textContent = (n.rain_rate || 0) > 0 ? "today · " + rainTxt(n.rain_rate) + " per hour now" : "today · dry right now";
       $("r-week").textContent = rainTxt(n.rain_week);
       $("r-month").textContent = rainTxt(n.rain_month);
       $("r-year").textContent = rainTxt(n.rain_year);
@@ -1627,14 +1797,15 @@
       $("r-24h").textContent = rainTxt(n.rain_24h);
       $("r-event").textContent = rainTxt(n.rain_event);
 
-      var raining = n.raining || (n.rain_rate || 0) > 0;
-      var pill = lightningNear(data.lightning) ? "Lightning nearby" : raining ? "Raining now" : "";
+      var w = drawWatch(n), raining = (n.rain_rate || 0) > 0;
+      var warning = w[0] === "calm" ? "" : w[2].split(":")[0].split(".")[0];
+      var pill = w[0] === "danger" ? warning : lightningNear(data.lightning) ? "Lightning nearby" : raining ? "Raining now" : warning;
       drawLightning(data.lightning);
       $("t-alert").hidden = !pill;
       $("t-alert").textContent = pill;
 
       drawToday(data.today, n);
-      drawRose(data.today && data.today.rose);
+      drawRose(data.today && data.today.rose, data.today && data.today.track, data.today && data.today.since);
       drawVpd(n.vpd_kpa);
       $("pw-cap").textContent = n.capacitor_v == null ? "…" : fmt(n.capacitor_v, 2) + " V";
       $("pw-bat").textContent = n.battery_v == null ? "…" : fmt(n.battery_v, 2) + " V";
