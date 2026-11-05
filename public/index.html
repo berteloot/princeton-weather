@@ -1288,7 +1288,7 @@
     function icon(kind) {
       var g;
       if (kind === "partly") g = sun(17, 17, 7) + '<g transform="translate(5 6) scale(0.82)">' + cloud("#fff") + "</g>";
-      else if (kind === "cloud") g = '<g transform="translate(-6 -6) scale(0.8)">' + cloud("#9AA1C2") + "</g>" + cloud("#E3E6F3");
+      else if (kind === "cloud") g = '<g transform="translate(4 2) scale(0.9)"><g transform="translate(-6 -6) scale(0.8)">' + cloud("#9AA1C2") + "</g>" + cloud("#E3E6F3") + "</g>"; // inset so the back cloud stays inside the 48 box
       else if (kind === "rain") g = '<g transform="translate(0 -6)">' + cloud("#C9CEE6") + '</g><path d="M17 36l-3 7M25 36l-3 7M33 36l-3 7" stroke="#4DA3FF" stroke-width="3.2" stroke-linecap="round" />';
       else if (kind === "storm") g = '<g transform="translate(0 -6)">' + cloud("#7C82A6") + "</g>" + BOLT;
       else if (kind === "snow") g = '<g transform="translate(0 -6)">' + cloud("#E3E6F3") + '</g><g fill="#fff"><circle cx="16" cy="39" r="2.4" /><circle cx="24" cy="43" r="2.4" /><circle cx="32" cy="39" r="2.4" /></g>';
