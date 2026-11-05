@@ -35,6 +35,9 @@ const CORS_ORIGINS = /^(https:\/\/princetonlive\.berteloot\.org|http:\/\/(localh
 const METRIC = { temp_unitid: 1, pressure_unitid: 3, wind_speed_unitid: 7, rainfall_unitid: 12, solar_irradiance_unitid: 16 };
 // A push older than this is ignored and the page falls back to Ecowitt alone.
 const PUSH_FRESH_SECONDS = 180;
+// How long after the rain sensor gets wet, with nothing measured, drizzle
+// counts as still falling (the flag stays on while the sensor dries).
+const DRIZZLE_SECONDS = 900;
 // While pushes arrive, the Ecowitt reading (history, rose, forecast, the
 // fields the console does not send) is refreshed this often instead of every
 // CACHE_SECONDS.
@@ -307,12 +310,49 @@ async function ingest(request, env, url) {
   // A reading without a usable temperature is noise; it must not overwrite a
   // good row from the same second.
   if (temp == null) return json({ error: "no temperature" }, 400);
+  // Drizzle: drops too light for the gauge to measure (the rain rate stays 0)
+  // still wet the piezo and set the console's rain flag. The flag also stays
+  // on while the sensor dries after measured rain, so it counts as drizzle
+  // only when the sensor had dried (flag off) after the last measured rain
+  // and got wet again (Stan, 5 Nov 2026: a light drizzle at 5:06 PM, rate 0).
+  // The flag only says the sensor is wet, not that drops still fall, so the
+  // drizzle is dated from when the sensor got wet (meta drizzle_from) and
+  // counts as falling for DRIZZLE_SECONDS after that, no longer.
+  let drizzleFrom = 0;
+  if (!(row.rain_rate > 0) && row.raining === 1) {
+    try {
+      const [dry, rained, from] = await env.DB.batch([
+        env.DB.prepare("SELECT t FROM minutes WHERE raining = 0 AND t < ? ORDER BY t DESC LIMIT 1").bind(t),
+        env.DB.prepare("SELECT value FROM meta WHERE key = 'last_rain'"),
+        env.DB.prepare("SELECT value FROM meta WHERE key = 'drizzle_from'"),
+      ]);
+      const dryT = dry.results[0]?.t || 0, lastRain = Number(rained.results[0]?.value) || 0, from0 = Number(from.results[0]?.value) || 0;
+      if (from0 > dryT) drizzleFrom = from0; // the same wet spell
+      else if (dryT > lastRain) {
+        // A new one: dated from the first wet upload after the sensor was last dry.
+        const first = await env.DB.prepare("SELECT MIN(t) AS t FROM minutes WHERE t > ? AND t < ?").bind(dryT, t).first();
+        drizzleFrom = first?.t || t;
+      }
+    } catch (err) {
+      console.error("drizzle check failed", String(err));
+    }
+  }
   const cols = Object.keys(row);
   await env.DB.batch([
     env.DB.prepare(`INSERT INTO minutes (${cols.join(", ")}) VALUES (${cols.map(() => "?").join(", ")})
       ON CONFLICT(t) DO UPDATE SET ${cols.slice(1).map((c) => `${c} = excluded.${c}`).join(", ")}`).bind(...cols.map((c) => row[c])),
     env.DB.prepare("INSERT INTO meta (key, value) VALUES ('ingest_fields', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value")
       .bind(Object.keys(form).filter((k) => k !== "PASSKEY").sort().join(",")),
+    // The last minute rain was falling (a rain rate above 0, or drizzle), for the rain card's "dry since" (Stan, 5 Nov 2026). Kept as
+    // the latest time, so a late upload never moves it back.
+    // Drizzle moves it no later than DRIZZLE_SECONDS after it began.
+    ...(row.rain_rate > 0 || drizzleFrom
+      ? [env.DB.prepare("INSERT INTO meta (key, value) VALUES ('last_rain', ?) ON CONFLICT(key) DO UPDATE SET value = MAX(CAST(value AS INTEGER), CAST(excluded.value AS INTEGER))")
+          .bind(String(row.rain_rate > 0 ? t : Math.min(t, drizzleFrom + DRIZZLE_SECONDS)))]
+      : []),
+    drizzleFrom
+      ? env.DB.prepare("INSERT INTO meta (key, value) VALUES ('drizzle_from', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value").bind(String(drizzleFrom))
+      : env.DB.prepare("UPDATE meta SET value = '0' WHERE key = 'drizzle_from' AND value <> '0'"),
   ]);
   return new Response("OK");
 }
@@ -322,7 +362,12 @@ async function ingest(request, env, url) {
 async function latestPush(env) {
   if (!env.DB) return null;
   try {
-    const r = await env.DB.prepare("SELECT * FROM minutes ORDER BY t DESC LIMIT 1").first();
+    const [latest, rained, drizzled] = await env.DB.batch([
+      env.DB.prepare("SELECT * FROM minutes ORDER BY t DESC LIMIT 1"),
+      env.DB.prepare("SELECT value FROM meta WHERE key = 'last_rain'"),
+      env.DB.prepare("SELECT value FROM meta WHERE key = 'drizzle_from'"),
+    ]);
+    const r = latest.results[0], lastRain = Number(rained.results[0]?.value), drizzleFrom = Number(drizzled.results[0]?.value) || 0;
     if (!r || Date.now() / 1000 - r.t > PUSH_FRESH_SECONDS) return null;
     const now = {
       temp: r.temp, feels_like: r.feels_like, dew_point: r.dew_point, humidity: r.humidity,
@@ -332,6 +377,11 @@ async function latestPush(env) {
       rain_rate: r.rain_rate, rain_1h: r.rain_hour, rain_event: r.rain_event, rain_day: r.rain_day,
       rain_week: r.rain_week, rain_month: r.rain_month, rain_year: r.rain_year,
       solar: r.solar, uvi: r.uvi, battery_v: r.battery_v, capacitor_v: r.capacitor_v,
+      last_rain: lastRain > 0 ? lastRain : null,
+      // When the sensor got wet from drizzle, while it is still wet; the page
+      // says "drizzle now" for DRIZZLE_SECONDS, then "sensor still wet".
+      drizzle_from: r.raining === 1 && !(r.rain_rate > 0) && drizzleFrom > 0 ? drizzleFrom : null,
+      drizzle_seconds: DRIZZLE_SECONDS,
     };
     for (const k of Object.keys(now)) if (now[k] == null) delete now[k];
     return { t: r.t, now };

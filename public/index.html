@@ -39,7 +39,7 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,500;12..96,700;12..96,800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&display=swap" rel="stylesheet" />
 
   <style>
     :root {
@@ -170,14 +170,14 @@
     .sub { margin-top: 0.6rem; font-weight: 600; opacity: 0.9; }
     .real { margin-top: 0.35rem; font-family: 'Bricolage Grotesque', sans-serif; font-size: 1.05rem; font-weight: 700; font-variant-numeric: tabular-nums; opacity: 0.85; }
 
-    .wind { grid-column: span 5; background: var(--sky); color: #fff; display: grid; grid-template-columns: 1fr auto; gap: 1rem; align-items: center; }
-    .humid { grid-column: span 4; background: var(--teal); color: var(--ink); }
-    .feels { grid-column: span 3; background: var(--pink); color: #fff; }
-    .rain { grid-column: span 7; background: var(--violet); color: #fff; }
-    .press { grid-column: span 5; background: var(--ink); color: #fff; }
-    .sun { grid-column: span 4; background: var(--sun); color: var(--ink); }
-    .dew { grid-column: span 4; background: var(--lime); color: var(--ink); }
-    .forecast { grid-column: span 12; background: linear-gradient(135deg, #14112B 0%, #2A1A5E 55%, #4B2391 100%); color: #fff; display: grid; grid-template-columns: auto 1fr 1.1fr; gap: 1.6rem; align-items: center; }
+    .wind { grid-column: span 5; --card: var(--sky); color: #fff; display: grid; grid-template-columns: 1fr auto; gap: 1rem; align-items: center; }
+    .humid { grid-column: span 4; --card: var(--teal); color: var(--ink); }
+    .feels { grid-column: span 3; --card: var(--pink); color: #fff; }
+    .rain { grid-column: span 7; --card: var(--violet); color: #fff; }
+    .press { grid-column: span 5; --card: var(--ink); color: #fff; }
+    .sun { grid-column: span 4; --card: var(--sun); color: var(--ink); }
+    .dew { grid-column: span 4; --card: var(--lime); color: var(--ink); }
+    .forecast { grid-column: span 12; --card: linear-gradient(135deg, #14112B 0%, #2A1A5E 55%, #4B2391 100%); color: #fff; display: grid; grid-template-columns: auto 1fr 1.1fr; gap: 1.6rem; align-items: center; }
     .forecast h2 { color: var(--sun); opacity: 1; margin-bottom: 0.3rem; }
     .fc-icon { width: 150px; height: 150px; } /* reserved, so the text does not move when the icon arrives */
     .fc-icon svg { width: 100%; height: 100%; display: block; }
@@ -205,22 +205,22 @@
     @media (max-width: 640px) { .forecast { grid-template-columns: 1fr; } .fc-icon { width: 110px; height: 110px; } }
 
     /* Row two: today so far and the wind rose. Row four adds VPD; row five the watch, lightning and sensor power. */
-    .today { grid-column: span 6; background: var(--hot); color: #fff; }
-    .rose { grid-column: span 6; background: #fff; color: var(--ink); }
-    .vpd { grid-column: span 4; background: #167A44; color: #fff; }
-    .power { grid-column: span 4; background: #2A2546; color: #fff; }
-    .lightning { grid-column: span 4; background: #24325F; color: #fff; }
-    .watch { grid-column: span 4; background: #fff; color: var(--ink); border: 3px solid var(--ink); }
-    .watch.frost { background: #CDEBFF; }
-    .watch.freeze { background: #1F3A73; color: #fff; border-color: #1F3A73; }
-    .watch.heat { background: #FFB347; }
-    .watch.danger { background: #B71C32; color: #fff; border-color: #B71C32; }
+    .today { grid-column: span 6; --card: var(--hot); color: #fff; }
+    .rose { grid-column: span 6; --card: #fff; color: var(--ink); }
+    .vpd { grid-column: span 4; --card: #167A44; color: #fff; }
+    .power { grid-column: span 4; --card: #2A2546; color: #fff; }
+    .lightning { grid-column: span 4; --card: #24325F; color: #fff; }
+    .watch { grid-column: span 4; --card: #fff; color: var(--ink); border: 3px solid var(--ink); }
+    .watch.frost { --card: #CDEBFF; }
+    .watch.freeze { --card: #1F3A73; color: #fff; border-color: #1F3A73; }
+    .watch.heat { --card: #FFB347; }
+    .watch.danger { --card: #B71C32; color: #fff; border-color: #B71C32; }
     .watch-row { display: flex; align-items: center; gap: 1rem; }
     .watch-icon { width: 54px; height: 54px; flex: none; }
     .watch-msg { font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: clamp(1.3rem, 2.4vw, 1.7rem); line-height: 1.15; }
     .watch-season { display: inline-block; font-size: 0.75rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; padding: 0.15rem 0.6rem; border-radius: 999px; background: rgba(20,17,43,0.08); margin-bottom: 0.7rem; }
     .watch.freeze .watch-season, .watch.danger .watch-season { background: rgba(255,255,255,0.18); }
-    .lightning.near { background: #5B1F8F; }
+    .lightning.near { --card: #5B1F8F; }
     .lightning h2 { color: var(--sun); opacity: 1; }
     .bolt { width: 44px; height: 44px; flex: none; }
     .soon-badge { display: inline-block; background: var(--sun); color: var(--ink); font-weight: 800; font-size: 0.8rem; padding: 0.25rem 0.75rem; border-radius: 999px; margin-bottom: 0.6rem; }
@@ -250,6 +250,7 @@
     .rose-track-head span:first-child { text-transform: uppercase; color: #6E6A85; }
     .rose-track-head span:last-child { font-weight: 700; letter-spacing: 0; text-align: right; }
     #rose-track { width: 100%; display: block; overflow: visible; touch-action: pan-y; }
+    #rose-track:focus-visible { outline: 3px solid var(--sun); outline-offset: 4px; border-radius: 8px; }
     #rose-track text { font-size: 9px; font-weight: 700; fill: #6E6A85; }
     .rose-legend { display: flex; gap: 4px 10px; justify-content: center; margin-top: 0.5rem; font-size: 0.72rem; font-weight: 700; flex-wrap: wrap; }
     .rose-legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -2px; margin-right: 3px; }
@@ -271,7 +272,7 @@
 
     .rain-row2 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.8rem; margin-top: 0.8rem; }
     .pill.alert { background: var(--ink); color: #fff; }
-    .chart { grid-column: span 12; background: #fff; color: var(--ink); }
+    .chart { grid-column: span 12; --card: #fff; color: var(--ink); }
 
     .compass { width: 150px; height: 150px; }
     .compass .arrow { transform-origin: 75px 75px; transition: transform 1s cubic-bezier(.3,1.6,.5,1); }
@@ -284,7 +285,6 @@
     .chip { background: rgba(255,255,255,0.16); border-radius: 18px; padding: 0.8rem 0.9rem; }
     .chip b { display: block; font-family: 'Bricolage Grotesque', sans-serif; font-size: 1.5rem; font-weight: 800; }
     .chip span { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.85; }
-    .drops { position: absolute; inset: 0; pointer-events: none; opacity: 0.18; }
 
     .gauge { width: 100%; max-width: 260px; display: block; margin: 0.4rem auto 0; }
     .gauge .needle { transform-origin: 130px 130px; transition: transform 1s cubic-bezier(.3,1.6,.5,1); }
@@ -321,7 +321,15 @@
     .seg button:focus-visible { outline: 3px solid var(--sun); outline-offset: 2px; }
 
     /* Records and season cards: white, each with its own accent. */
-    .hs { grid-column: span 4; background: #fff; color: var(--ink); }
+    /* Station records and the season: one movable box holding its four (Stan,
+       5 Nov 2026), laid out as before inside it. */
+    .season { grid-column: span 12; --card: rgba(20,17,43,0.42); color: #fff; }
+    .season-head { display: flex; justify-content: space-between; align-items: center; gap: 0.8rem 1rem; flex-wrap: wrap; padding-right: 2rem; margin-bottom: 1rem; }
+    .season .season-head .sec-title { color: #fff; font-size: 1.5rem; letter-spacing: 0; text-transform: none; opacity: 1; margin: 0; }
+    .season .sec-note { color: #D3D7E6; }
+    .season-grid { display: grid; gap: 1.1rem; grid-template-columns: repeat(12, 1fr); }
+    .season-grid .tile { box-shadow: none; }
+    .hs { grid-column: span 4; --card: #fff; color: var(--ink); }
     .hs .stat-row { border-color: #EEE9F5; }
     .hs .stat-row b { font-size: 1.55rem; }
     .hs .stat-row small { color: #5d5a70; opacity: 1; }
@@ -343,7 +351,9 @@
     @media (max-width: 900px) { .hs { grid-column: span 12; } }
     @media (max-width: 560px) { .yoy-grid { grid-template-columns: 1fr; } .seg { width: 100%; } .seg button { flex: 1; padding: 0 0.5rem; } }
 
-    .radar { margin-top: 1.4rem; background: var(--ink); color: #fff; border-radius: var(--radius); padding: 1.6rem; }
+    /* A movable box like the others since 5 Nov 2026 (Stan): last in the first grid. */
+    .radar { grid-column: span 12; --card: var(--ink); color: #fff; padding: 1.6rem; }
+    .radar-head { padding-right: 2rem; } /* room for the move grip */
     .radar-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
     .radar h2 { font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 1.6rem; line-height: 1.1; }
     .radar-sub { opacity: 0.8; font-size: 0.95rem; margin-top: 0.25rem; }
@@ -368,7 +378,7 @@
     .radar-explain summary:focus-visible { outline: 3px solid var(--sun); outline-offset: 2px; border-radius: 12px; }
     .radar-explain p { max-width: 68ch; line-height: 1.55; font-size: 0.95rem; opacity: 0.9; margin-bottom: 0.9rem; }
     /* The radar sits between the charts and the records, so the grid resumes below it. */
-    .radar + .grid { margin-top: 1.1rem; }
+    .grid + .grid { margin-top: 1.1rem; }
     @media (max-width: 640px) { .radar { padding: 1.1rem; } .radar-map { height: 360px; } .radar-legend { margin-left: 0; } }
     .about {
       margin-top: 1.1rem; border-radius: var(--radius); padding: 1.8rem; padding-right: calc(38% + 1rem);
@@ -417,9 +427,81 @@
       }
       .compass { width: 120px; height: 120px; }
     }
+    /* Live sky behind the page (Stan, 5 Nov 2026): the background shows the
+       weather outside right now, animated (rain running down the glass, snow,
+       drifting clouds, stars), never on the cards. Colors come from data-sky. */
+    .sky { position: fixed; inset: 0; z-index: 0; pointer-events: none; background: var(--sky-bg, linear-gradient(180deg, #9CC8F5, #EAF3FD)); transition: background 2s ease; }
+    .sky canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+    .hero { z-index: 1; }
+    footer { position: relative; z-index: 2; }
+    body[data-sky="clear"] { --sky-bg: linear-gradient(180deg, #5FA8F0 0%, #9CCBF7 45%, #E3F1FD 100%); }
+    body[data-sky="partly"] { --sky-bg: linear-gradient(180deg, #7FA9D6 0%, #B4CDE8 50%, #EAF0F7 100%); }
+    body[data-sky="cloudy"] { --sky-bg: linear-gradient(180deg, #9AA6B6 0%, #C3CAD4 50%, #E5E8EC 100%); }
+    body[data-sky="rain"] { --sky-bg: linear-gradient(180deg, #6B7889 0%, #97A3B2 50%, #C7CED8 100%); }
+    body[data-sky="storm"] { --sky-bg: linear-gradient(180deg, #353B4C 0%, #5A6275 55%, #8790A0 100%); }
+    body[data-sky="snow"] { --sky-bg: linear-gradient(180deg, #A9B7C7 0%, #D3DCE6 50%, #F3F6F9 100%); }
+    body[data-sky="fog"] { --sky-bg: linear-gradient(180deg, #B9C0C8 0%, #D5DADF 50%, #ECEEF0 100%); }
+    body[data-sky="dusk"] { --sky-bg: linear-gradient(180deg, #3F4F8F 0%, #9A79B5 45%, #F4A57E 100%); }
+    body[data-sky="night"] { --sky-bg: linear-gradient(180deg, #070C22 0%, #142050 55%, #2B3A6E 100%); }
+    body[data-sky="night-cloudy"] { --sky-bg: linear-gradient(180deg, #151A26 0%, #262D3D 55%, #3B4357 100%); }
+    body[data-sky="night-rain"] { --sky-bg: linear-gradient(180deg, #10141D 0%, #1F2633 55%, #343C4C 100%); }
+    /* Text that sits on the sky itself turns light when the sky is dark. */
+    body.sky-dark .sec-title { color: #fff; }
+    body.sky-dark .sec-note { color: #D3D7E6; }
+    @media (prefers-reduced-motion: reduce) { .sky { transition: none; } }
+    /* Hero over the live sky (Stan, 5 Nov 2026): no colored backdrop of its
+       own, one centered column like a phone's weather app: place and time,
+       the temperature large and light, the sky in words, then the details,
+       on frosted glass. A soft shade at the top keeps white text readable on
+       a pale sky. */
+    .hero { background: linear-gradient(180deg, rgba(8,12,30,0.32) 0%, rgba(8,12,30,0.12) 55%, rgba(8,12,30,0) 100%); min-height: 0; padding: 104px 1rem 110px; transition: none; }
+    .hero .blob, .hero .wave { display: none; }
+    .hero-inner { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0; max-width: 760px; }
+    .hero-inner > div { display: contents; }
+    .hero-top { order: 1; display: flex; gap: 0.5rem; align-items: center; justify-content: center; flex-wrap: wrap; }
+    .kicker, .clock, .pill, .units { background: rgba(255,255,255,0.16); color: #fff; border: 1px solid rgba(255,255,255,0.28);
+      -webkit-backdrop-filter: blur(14px) saturate(1.3); backdrop-filter: blur(14px) saturate(1.3); }
+    .clock { margin: 0; padding: 0.3rem 0.9rem; }
+    .hero h1 { order: 2; font-size: clamp(1.7rem, 3.4vw, 2.5rem); line-height: 1.1; font-weight: 700; letter-spacing: -0.01em; margin: 0.9rem 0 0; }
+    .big-temp { order: 4; text-align: center; font-weight: 300; font-size: clamp(6rem, 17vw, 10.5rem); line-height: 0.95; letter-spacing: -0.03em; margin-top: 0.2rem; text-shadow: 0 2px 24px rgba(8,12,30,0.25); }
+    .big-temp sup { font-weight: 300; }
+    .hero-sky { order: 5; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: clamp(1.15rem, 2vw, 1.4rem); min-height: 1.4em; text-shadow: 0 1px 10px rgba(8,12,30,0.3); }
+    .temp-meta { order: 7; justify-content: center; text-align: center; font-size: 1rem; margin-top: 0.9rem; }
+    .hero-line { order: 8; margin: 1.1rem auto 0; max-width: 46ch; font-size: 1rem; font-weight: 500; opacity: 0.9; }
+    .hero-line, .updated, .temp-meta { text-shadow: 0 1px 8px rgba(8,12,30,0.35); }
+    .controls { max-width: 760px; justify-content: center; gap: 0.8rem 1.4rem; margin-top: 1.4rem; }
+    .units { padding: 3px; }
+    .units button[aria-pressed="true"] { background: rgba(255,255,255,0.92); color: var(--ink); }
+    .pill.alert { background: rgba(20,17,43,0.7); }
+    @media (max-width: 900px) { .big-temp, .temp-meta { text-align: center; justify-content: center; } }
+    @media (max-width: 640px) { .hero { padding: 92px 1rem 96px; } }
+    /* Wide screens: the hero lies across the page in three columns (Stan,
+       5 Nov 2026): who and what on the left, the temperature in the middle,
+       the details on the right, so the cards start higher. */
+    @media (min-width: 901px) {
+      .hero { padding: 96px 1rem 92px; }
+      .hero-inner { display: grid; max-width: 1180px; text-align: left; align-items: center; column-gap: 3rem; row-gap: 0.5rem;
+        grid-template-columns: minmax(0, 1.15fr) auto minmax(0, 1fr);
+        grid-template-areas: "top temp inside" "title temp meta" "line sky id"; }
+      .hero-top { grid-area: top; justify-content: flex-start; }
+      .hero h1 { grid-area: title; margin: 0.3rem 0 0; font-size: clamp(1.8rem, 2.6vw, 2.4rem); }
+      .hero-line { grid-area: line; margin: 0.2rem 0 0; max-width: 40ch; align-self: start; }
+      .big-temp { grid-area: temp; margin: 0; font-size: clamp(5.5rem, 9vw, 8.5rem); align-self: end; }
+      .hero-sky { grid-area: sky; text-align: center; align-self: start; }
+      .temp-meta { grid-area: meta; margin: 0; justify-content: flex-end; text-align: right; }
+      .controls { max-width: 1180px; justify-content: space-between; margin-top: 1.2rem; }
+    }
+    /* Cards as tinted glass (Stan, 5 Nov 2026): each card's color (--card)
+       is painted a touch see-through over a blur of the live sky, so clouds,
+       stars and rain show faintly through, as on a phone's glass design. */
+    .tile { background: transparent; isolation: isolate;
+      -webkit-backdrop-filter: blur(12px) saturate(1.3); backdrop-filter: blur(12px) saturate(1.3); }
+    .tile::before { content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none;
+      background: var(--card, #fff); opacity: 0.86; }
   </style>
 </head>
 <body class="skeleton">
+  <div class="sky" id="sky" aria-hidden="true"><canvas id="sky-fx"></canvas></div>
 
   <nav aria-label="Main navigation">
     <div class="nav-inner">
@@ -440,13 +522,16 @@
 
     <div class="hero-inner">
       <div>
-        <span class="kicker"><span class="live-dot" aria-hidden="true"></span>Princeton, right now</span>
-        <time class="clock" id="clock" aria-label="Local time in Princeton"><b id="clock-time">…</b><span id="clock-date"></span></time>
-        <h1 class="display">Princeton<br />Weather, Live</h1>
+        <div class="hero-top">
+          <span class="kicker"><span class="live-dot" aria-hidden="true"></span>Princeton, right now</span>
+          <time class="clock" id="clock" aria-label="Local time in Princeton"><b id="clock-time">…</b><span id="clock-date"></span></time>
+        </div>
+        <h1 class="display">Princeton Weather, Live</h1>
         <p class="hero-line">Live readings from the weather station in my Princeton backyard, refreshed about once a minute.</p>
       </div>
       <div>
         <div class="big-temp display"><span id="t-now">…</span><sup id="t-unit">°F</sup></div>
+        <p class="hero-sky" id="hero-sky"></p>
         <div class="temp-meta">
           <span class="pill" id="t-feels">Feels like …</span>
           <span class="pill" id="t-range">24h … / …</span>
@@ -538,19 +623,12 @@
         <svg id="rose" viewBox="-130 -130 260 260" role="img" aria-label="Wind rose since midnight"></svg>
         <div class="rose-calm" id="rose-calm"></div>
         <div class="rose-track-head"><span>When, through the day</span><span id="rose-hover" aria-live="polite"></span></div>
-        <svg id="rose-track" viewBox="0 0 320 124" role="img" aria-label="Wind direction through the day, one dot per 10 minutes"></svg>
+        <svg id="rose-track" viewBox="0 0 320 124" role="slider" tabindex="0" aria-label="Wind direction through the day, one dot per 10 minutes; arrow keys move through the readings"></svg>
         <div class="rose-legend" id="rose-legend"></div>
         <p class="note" id="rose-note">Bigger spokes mean the wind blew from that direction more often; color shows average speed.</p>
       </section>
 
       <section class="tile rain">
-        <svg class="drops" viewBox="0 0 600 220" preserveAspectRatio="none" aria-hidden="true">
-          <g fill="#fff">
-            <path d="M60 30 q10 18 0 26 q-10 -8 0 -26z" /><path d="M180 90 q10 18 0 26 q-10 -8 0 -26z" />
-            <path d="M320 20 q10 18 0 26 q-10 -8 0 -26z" /><path d="M460 70 q10 18 0 26 q-10 -8 0 -26z" />
-            <path d="M560 150 q10 18 0 26 q-10 -8 0 -26z" /><path d="M250 170 q10 18 0 26 q-10 -8 0 -26z" />
-          </g>
-        </svg>
         <h2>Rain</h2>
         <div class="rain-row">
           <div>
@@ -653,7 +731,7 @@
         <p class="note" id="pw-note">My WS90 outdoor sensor runs on a small solar panel that charges a capacitor, with AA batteries as backup.</p>
       </section>
 
-      <div class="range-bar">
+      <div class="range-bar" data-heads=".chart:not(.p-tile)">
         <h2 class="sec-title">Charts</h2>
         <div class="seg" role="group" aria-label="Time span for the temperature and wind charts">
           <button type="button" data-range="24h" aria-pressed="true">24 hours</button>
@@ -679,66 +757,69 @@
         <div class="w-legend"><span><i></i><b id="wc-leg">Wind speed</b></span><span><i class="g"></i><b id="wc-leg-g">Gust</b></span></div>
       </section>
 
+
+      <section class="tile radar" id="radar">
+        <div class="radar-head">
+          <div>
+            <h2>Radar around Princeton</h2>
+            <p class="radar-sub">Where rain, snow or hail is falling and how hard, over the last 50 minutes, updated every 5 minutes.</p>
+          </div>
+          <a class="radar-link" href="https://www.wunderground.com/wundermap?lat=40.35&amp;lon=-74.66&amp;zoom=8&amp;radar=1&amp;wxstn=0" target="_blank" rel="noopener">Open the full WunderMap ↗</a>
+        </div>
+        <div class="radar-map" id="radar-map" role="img" aria-label="Animated weather radar map centered on Princeton, New Jersey"></div>
+        <div class="radar-bar">
+          <button type="button" class="radar-play" id="radar-play" aria-label="Pause radar animation">❚❚</button>
+          <span class="radar-time" id="radar-time">Loading radar…</span>
+          <ul class="radar-legend" aria-label="Radar colour key">
+            <li><i style="background: linear-gradient(90deg, #04E9E7, #019FF4)"></i>Very light</li>
+            <li><i style="background: linear-gradient(90deg, #02FD02, #01C501)"></i>Light</li>
+            <li><i style="background: linear-gradient(90deg, #FDF802, #E5BC00)"></i>Moderate</li>
+            <li><i style="background: linear-gradient(90deg, #FD9500, #FD0000)"></i>Heavy</li>
+            <li><i style="background: #F800FD"></i>Hail possible</li>
+          </ul>
+        </div>
+        <details class="radar-explain">
+          <summary>What am I looking at?</summary>
+          <p>The map shows rain, snow and hail that is falling, not clouds, so a dry overcast sky leaves it clear. Radar sends out microwave pulses and measures what bounces off falling drops, flakes and hail, and cloud droplets are too small to show up.</p>
+          <p>The colors show how strong the echo is, which tracks how hard it is coming down. Snow sends back a weaker echo than rain, so a steady snowfall can look lighter on the map than it is.</p>
+          <p>Light colors over Princeton can mean rain or snow that evaporates before it lands, and faint specks on a clear night are usually birds, insects or ground clutter. My station's rain gauge is the final word on what reached the ground here.</p>
+          <p>Iowa State University's Iowa Environmental Mesonet stitches the lowest scans of about 140 National Weather Service radars into this map every 5 minutes. The nearest one is the Weather Service's Philadelphia radar, KDIX, near Fort Dix, about 30 miles (49 km) southeast.</p>
+        </details>
+      </section>
+
+      <section class="tile season" id="season">
+        <div class="season-head">
+          <h2 class="sec-title">Station records and the season</h2>
+          <span class="sec-note" id="hs-since"></span>
+        </div>
+        <div class="season-grid">
+          <section class="tile hs records">
+            <h2>Records</h2>
+            <p class="hs-badge" id="hs-badge" hidden></p>
+            <div class="stat-rows" id="hs-records"><p class="hs-empty">Loading the station's history…</p></div>
+          </section>
+
+          <section class="tile hs rainsum">
+            <h2>Rain totals</h2>
+            <div class="stat-rows" id="hs-rain"></div>
+          </section>
+
+          <section class="tile hs garden">
+            <h2>Frost and the garden</h2>
+            <div class="stat-rows" id="hs-garden"></div>
+            <p class="note" id="hs-gdd-note">Growing degree days add up each day's average temperature above 50 °F. Most garden crops and insects develop in step with them.</p>
+          </section>
+
+          <section class="tile hs yoy" id="hs-yoy">
+            <h2>This week against last year</h2>
+            <div id="hs-yoy-body"></div>
+          </section>
+        </div>
+      </section>
     </div>
     <p class="layout-reset" id="layout-reset" hidden>You moved some boxes. <button type="button" id="layout-reset-btn">Reset layout</button></p>
 
-    <section class="radar" id="radar">
-      <div class="radar-head">
-        <div>
-          <h2>Radar around Princeton</h2>
-          <p class="radar-sub">Where rain, snow or hail is falling and how hard, over the last 50 minutes, updated every 5 minutes.</p>
-        </div>
-        <a class="radar-link" href="https://www.wunderground.com/wundermap?lat=40.35&amp;lon=-74.66&amp;zoom=8&amp;radar=1&amp;wxstn=0" target="_blank" rel="noopener">Open the full WunderMap ↗</a>
-      </div>
-      <div class="radar-map" id="radar-map" role="img" aria-label="Animated weather radar map centered on Princeton, New Jersey"></div>
-      <div class="radar-bar">
-        <button type="button" class="radar-play" id="radar-play" aria-label="Pause radar animation">❚❚</button>
-        <span class="radar-time" id="radar-time">Loading radar…</span>
-        <ul class="radar-legend" aria-label="Radar colour key">
-          <li><i style="background: linear-gradient(90deg, #04E9E7, #019FF4)"></i>Very light</li>
-          <li><i style="background: linear-gradient(90deg, #02FD02, #01C501)"></i>Light</li>
-          <li><i style="background: linear-gradient(90deg, #FDF802, #E5BC00)"></i>Moderate</li>
-          <li><i style="background: linear-gradient(90deg, #FD9500, #FD0000)"></i>Heavy</li>
-          <li><i style="background: #F800FD"></i>Hail possible</li>
-        </ul>
-      </div>
-      <details class="radar-explain">
-        <summary>What am I looking at?</summary>
-        <p>The map shows rain, snow and hail that is falling, not clouds, so a dry overcast sky leaves it clear. Radar sends out microwave pulses and measures what bounces off falling drops, flakes and hail, and cloud droplets are too small to show up.</p>
-        <p>The colors show how strong the echo is, which tracks how hard it is coming down. Snow sends back a weaker echo than rain, so a steady snowfall can look lighter on the map than it is.</p>
-        <p>Light colors over Princeton can mean rain or snow that evaporates before it lands, and faint specks on a clear night are usually birds, insects or ground clutter. My station's rain gauge is the final word on what reached the ground here.</p>
-        <p>Iowa State University's Iowa Environmental Mesonet stitches the lowest scans of about 140 National Weather Service radars into this map every 5 minutes. The nearest one is the Weather Service's Philadelphia radar, KDIX, near Fort Dix, about 30 miles (49 km) southeast.</p>
-      </details>
-    </section>
 
-    <div class="grid">
-      <div class="range-bar">
-        <h2 class="sec-title">Station records and the season</h2>
-        <span class="sec-note" id="hs-since"></span>
-      </div>
-
-      <section class="tile hs records">
-        <h2>Records</h2>
-        <p class="hs-badge" id="hs-badge" hidden></p>
-        <div class="stat-rows" id="hs-records"><p class="hs-empty">Loading the station's history…</p></div>
-      </section>
-
-      <section class="tile hs rainsum">
-        <h2>Rain totals</h2>
-        <div class="stat-rows" id="hs-rain"></div>
-      </section>
-
-      <section class="tile hs garden">
-        <h2>Frost and the garden</h2>
-        <div class="stat-rows" id="hs-garden"></div>
-        <p class="note" id="hs-gdd-note">Growing degree days add up each day's average temperature above 50 °F. Most garden crops and insects develop in step with them.</p>
-      </section>
-
-      <section class="tile hs yoy" id="hs-yoy">
-        <h2>This week against last year</h2>
-        <div id="hs-yoy-body"></div>
-      </section>
-    </div>
 
     <section class="about">
       <img class="about-photo" src="ws90-princeton.webp" alt="My Ecowitt WS90 sensor array and a second sensor in its radiation shield, on the pole in my Princeton backyard" width="900" height="1200" loading="lazy" decoding="async" />
@@ -793,6 +874,7 @@
     var clockDate = new Intl.DateTimeFormat("en-US", { weekday: "short", month: "short", day: "numeric", timeZone: NY });
     var whenFmt = new Intl.DateTimeFormat("en-US", { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: NY });
     var hourFmt = new Intl.DateTimeFormat("en-US", { hour: "numeric", timeZone: NY });
+    var dayTimeFmt = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: NY });
 
     var POINTS = ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];
     function compass(deg) { return deg == null ? "…" : POINTS[Math.round(deg / 22.5) % 16]; }
@@ -1580,19 +1662,41 @@
       var hover = $("rose-hover"), guide = $("rt-guide"), unit = units === "us" ? "mph" : "km/h";
       var timeFmt = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", hour: "numeric", minute: "2-digit" });
       hover.textContent = pts.length ? "" : "No readings yet";
+      svg.removeAttribute("aria-valuetext");
+      var cur = -1;
+      var pick = function (i) {
+        cur = i;
+        var p = pts[i], txt = timeFmt.format(new Date(p[0] * 1000)) + " · " + (Math.round(p[1]) < 1 ? "calm" :
+          "from the " + POINTS[Math.round(p[2] / 22.5) % 16] + ", " + fmt(conv.speed(p[1])) + " " + unit);
+        guide.setAttribute("x1", X(p[0])); guide.setAttribute("x2", X(p[0])); guide.setAttribute("opacity", "0.35");
+        hover.textContent = txt; svg.setAttribute("aria-valuetext", txt);
+      };
       var show = function (e) {
         if (!pts.length) return;
         var m = svg.getScreenCTM(); if (!m) return;
         var q = svg.createSVGPoint(); q.x = e.clientX; q.y = e.clientY; q = q.matrixTransform(m.inverse());
-        var best = pts[0];
-        pts.forEach(function (p) { if (Math.abs(X(p[0]) - q.x) < Math.abs(X(best[0]) - q.x)) best = p; });
-        guide.setAttribute("x1", X(best[0])); guide.setAttribute("x2", X(best[0])); guide.setAttribute("opacity", "0.35");
-        hover.textContent = timeFmt.format(new Date(best[0] * 1000)) + " · " + (Math.round(best[1]) < 1 ? "calm" :
-          "from the " + POINTS[Math.round(best[2] / 22.5) % 16] + ", " + fmt(conv.speed(best[1])) + " " + unit);
+        var best = 0;
+        pts.forEach(function (p, i) { if (Math.abs(X(p[0]) - q.x) < Math.abs(X(pts[best][0]) - q.x)) best = i; });
+        pick(best);
       };
-      var hide = function () { guide.setAttribute("opacity", "0"); hover.textContent = ""; };
+      var hide = function () { if (document.activeElement === svg) return; guide.setAttribute("opacity", "0"); hover.textContent = ""; };
       var hit = $("rt-hit");
       hit.addEventListener("pointermove", show); hit.addEventListener("pointerdown", show); hit.addEventListener("pointerleave", hide);
+      // Keyboard, like the pressure and temperature charts (Stan, 5 Nov 2026).
+      // Assigned, not added, because this redraws on every refresh.
+      svg.onkeydown = function (e) {
+        if (!pts.length) return;
+        var last = pts.length - 1, i = cur < 0 ? last : cur;
+        if (e.key === "ArrowLeft") i = cur < 0 ? last : Math.max(0, i - 1);
+        else if (e.key === "ArrowRight") i = Math.min(last, i + 1);
+        else if (e.key === "Home") i = 0;
+        else if (e.key === "End") i = last;
+        else if (e.key === "Escape") { cur = -1; guide.setAttribute("opacity", "0"); hover.textContent = ""; return; }
+        else return;
+        e.preventDefault();
+        pick(i);
+      };
+      svg.onblur = function () { cur = -1; guide.setAttribute("opacity", "0"); hover.textContent = ""; };
     }
 
     // Sunrise and sunset for Princeton from the standard sunrise equation (the
@@ -1789,7 +1893,17 @@
       // Raining now means rain is falling: the rain rate. The console's rain
       // flag stays on while the piezo sensor is still wet after the rain stops
       // (5 Nov 2026: on at 11:30 with the rate at 0 since before then).
-      $("r-sub").textContent = (n.rain_rate || 0) > 0 ? "today · " + rainTxt(n.rain_rate) + " per hour now" : "today · dry right now";
+      // Dry since the last minute rain fell: the time alone within 24 hours,
+      // the date and time before that (Stan, 5 Nov 2026).
+      var dry = "dry right now";
+      if (n.last_rain) dry = "dry since " + (Date.now() / 1000 - n.last_rain < 86400 ? clockTime : dayTimeFmt).format(new Date(n.last_rain * 1000));
+      // Drizzle: the sensor got wet with nothing to measure. Only its start is
+      // known, so it reads as falling for the first minutes, then as a wet
+      // sensor (Stan, 5 Nov 2026).
+      var drizzleNow = n.drizzle_from && Date.now() / 1000 - n.drizzle_from < (n.drizzle_seconds || 900);
+      $("r-sub").textContent = (n.rain_rate || 0) > 0 ? "today · " + rainTxt(n.rain_rate) + " per hour now" :
+        drizzleNow ? "today · light drizzle now, too little to measure" :
+        n.drizzle_from ? "today · drizzle from " + clockTime.format(new Date(n.drizzle_from * 1000)) + ", sensor still wet" : "today · " + dry;
       $("r-week").textContent = rainTxt(n.rain_week);
       $("r-month").textContent = rainTxt(n.rain_month);
       $("r-year").textContent = rainTxt(n.rain_year);
@@ -1797,7 +1911,7 @@
       $("r-24h").textContent = rainTxt(n.rain_24h);
       $("r-event").textContent = rainTxt(n.rain_event);
 
-      var w = drawWatch(n), raining = (n.rain_rate || 0) > 0;
+      var w = drawWatch(n), raining = (n.rain_rate || 0) > 0 || Boolean(n.drizzle_from && Date.now() / 1000 - n.drizzle_from < (n.drizzle_seconds || 900));
       var warning = w[0] === "calm" ? "" : w[2].split(":")[0].split(".")[0];
       var pill = w[0] === "danger" ? warning : lightningNear(data.lightning) ? "Lightning nearby" : raining ? "Raining now" : warning;
       drawLightning(data.lightning);
@@ -1829,8 +1943,237 @@
       drawCharts();
       renderHistory();
       drawForecast(data.forecast);
+      setSky(n, (n.rain_rate || 0) > 0 ? n.rain_rate : drizzleNow ? 0.2 : 0, lightningNear(data.lightning) && ((n.rain_rate || 0) > 0 || drizzleNow), data.forecast && data.forecast.state);
       stamp();
     }
+
+    // ---------- live sky ----------
+    // The page background shows the weather outside now: the sky's color from
+    // the time of day and the cloud cover, and, animated on a canvas, rain
+    // falling and running down the glass, snow, drifting clouds, fog, stars or
+    // lightning. Cloud cover by day comes from the station's sunlight against
+    // what a clear sky gives at this sun height (Haurwitz); at night, from the
+    // barometer's forecast. Reduced motion: one still frame. Uses sunElevation
+    // and the Haurwitz clear sky, as skyWord does.
+    var WX = { kind: "clear", night: false, rain: 0, snow: false, clouds: 0, wind: 0, dir: 270, fog: false, storm: false };
+    function setSky(n, precip, storm, forecastState) {
+      var elev = sunElevation(Date.now()), night = elev < -4, dusk = !night && elev < 6;
+      var clouds = 0.3;
+      if (elev > 10 && n.solar != null) {
+        var s = Math.sin(elev * Math.PI / 180), clear = 1098 * s * Math.exp(-0.057 / s), ratio = n.solar / clear;
+        clouds = ratio > 0.75 ? 0.05 : ratio > 0.4 ? 0.4 : ratio > 0.15 ? 0.85 : 1; // skyWord's bands
+      } else if (forecastState) {
+        clouds = forecastState === "sunny" ? 0.05 : forecastState === "partly" ? 0.4 : 0.85;
+      }
+      var fog = n.humidity >= 97 && n.temp != null && n.dew_point != null && n.temp - n.dew_point < 1 && (n.wind_speed || 0) < 6;
+      var snow = precip > 0 && n.temp != null && n.temp <= 1.5;
+      var kind = storm ? "storm" : precip > 0 ? (snow ? "snow" : "rain") : fog ? "fog" : clouds > 0.7 ? "cloudy" : clouds > 0.25 ? "partly" : "clear";
+      var look = night ? (kind === "rain" || kind === "storm" ? "night-rain" : kind === "clear" || kind === "partly" ? "night" : "night-cloudy") :
+        dusk && (kind === "clear" || kind === "partly") ? "dusk" : kind;
+      document.body.setAttribute("data-sky", look);
+      $("hero-sky").textContent = storm ? "Thunderstorm" : precip > 0 ? (snow ? "Snow" : precip < 0.3 ? "Light drizzle" : precip < 2.5 ? "Light rain" : precip < 7.6 ? "Rain" : "Heavy rain") :
+        fog ? "Fog" : kind === "cloudy" ? (night ? "Cloudy night" : "Cloudy") : kind === "partly" ? (night ? "Some clouds" : "Partly cloudy") : night ? "Clear night" : "Clear";
+      document.body.classList.toggle("sky-dark", night || kind === "storm");
+      WX = { kind: kind, night: night, rain: precip, snow: snow, clouds: precip > 0 || kind === "cloudy" ? Math.max(clouds, 0.85) : clouds,
+        wind: n.wind_speed || 0, dir: n.wind_dir_avg10 != null ? n.wind_dir_avg10 : n.wind_dir != null ? n.wind_dir : 270, fog: fog, storm: storm };
+      skyFx.update();
+    }
+
+    // Clouds are painted once into offscreen sprites (dozens of soft puffs,
+    // lit from above, shaded below) and slide across the top of the screen
+    // with the wind, nearer ones bigger and faster. Rain is a window: still
+    // beads and fine mist on the glass, bigger drops that swell, then run down
+    // in stops and starts, leaving a wet trail and a few beads behind, while
+    // thin streaks fall beyond the glass (Stan, 5 Nov 2026).
+    var skyFx = (function () {
+      var cv = $("sky-fx"), cx = cv.getContext("2d"), W = 0, H = 0, dpr = 1, raf = 0, last = 0;
+      var still = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+      var stars = [], clouds = [], streaks = [], drops = [], beads = [], flakes = [], flash = 0, nextFlash = 0, glint = null, nextGlint = 0;
+      var rnd = function (a, b) { return a + Math.random() * (b - a); };
+      function size() {
+        dpr = Math.min(window.devicePixelRatio || 1, 1.5); W = innerWidth; H = innerHeight;
+        cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); cx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+      // Wind pushes things the way it blows (from dir toward dir + 180); a calm
+      // day still drifts a little to the east.
+      function drift() { var b = (WX.dir + 180) * Math.PI / 180, s = Math.sin(b); return Math.abs(s) < 0.25 ? (s < 0 ? -0.25 : 0.25) : s; }
+      function tones() {
+        if (WX.night) return WX.kind === "rain" || WX.kind === "storm" ? ["#6F6A82", "#2A2C3C"] : ["#9C8DAE", "#3A3850"];
+        if (WX.kind === "storm") return ["#8E95A5", "#3F4556"];
+        if (WX.kind === "rain" || WX.kind === "snow") return ["#E4E7ED", "#8C95A6"];
+        if (WX.kind === "cloudy" || WX.kind === "fog") return ["#F6F7F9", "#AEB6C3"];
+        return ["#FFFFFF", "#C8D3E2"];
+      }
+      function sprite(w, h, top, bottom) {
+        var c = document.createElement("canvas"); c.width = Math.round(w); c.height = Math.round(h);
+        var g = c.getContext("2d"), n = Math.round(18 + w / 18);
+        for (var i = 0; i < n; i++) {
+          // Puffs on a dome: wide at the base, rising in the middle.
+          var u = rnd(0.12, 0.88), x = u * w, rise = Math.sin(u * Math.PI);
+          var y = h * (0.78 - rise * rnd(0.15, 0.45)), r = h * rnd(0.16, 0.3) * (0.6 + rise * 0.6);
+          var p = g.createRadialGradient(x, y, 0, x, y, r);
+          p.addColorStop(0, "rgba(255,255,255,0.9)"); p.addColorStop(0.55, "rgba(255,255,255,0.55)"); p.addColorStop(1, "rgba(255,255,255,0)");
+          g.fillStyle = p; g.beginPath(); g.arc(x, y, r, 0, 6.2832); g.fill();
+        }
+        // Light from above, shade below, kept inside the puffs.
+        g.globalCompositeOperation = "source-atop";
+        var sh = g.createLinearGradient(0, h * 0.15, 0, h);
+        sh.addColorStop(0, top); sh.addColorStop(1, bottom);
+        g.fillStyle = sh; g.fillRect(0, 0, w, h);
+        return c;
+      }
+      function build() {
+        var area = W * H / (1280 * 800), t = tones();
+        // Most stars hold steady; about one in twelve, the brightest, twinkles
+        // slowly, and now and then one of those glints (Stan, 5 Nov 2026).
+        stars = []; if (WX.night) for (var i = 0; i < 160 * area * (1 - WX.clouds * 0.8); i++) {
+          var bright = Math.random() < 0.08;
+          stars.push({ x: rnd(0, W), y: rnd(0, H * 0.85), r: bright ? rnd(1.3, 1.9) : rnd(0.4, 1.1), a: bright ? 0.9 : rnd(0.3, 0.7), bright: bright, p: rnd(0, 6.3), s: rnd(0.15, 0.35) });
+        }
+        glint = null; nextGlint = 0;
+        clouds = []; var nc = Math.round(WX.clouds * 10);
+        for (var j = 0; j < nc; j++) {
+          var near = rnd(0.5, 1), w = Math.max(W, 700) * rnd(0.35, 0.7) * near, h = w * rnd(0.32, 0.42);
+          clouds.push({ img: sprite(w, h, t[0], t[1]), w: w, h: h, x: rnd(-0.3, 1.1) * W, y: H * rnd(-0.12, 0.32) + (1 - near) * -40, k: near,
+            a: (WX.night ? 0.75 : 0.9) * (0.55 + near * 0.45) });
+        }
+        clouds.sort(function (a, b) { return a.k - b.k; });
+        var rate = WX.rain, wet = rate > 0 && !WX.snow, heavy = Math.min(1, rate / 8);
+        streaks = []; if (wet) for (var k = 0; k < (rate < 0.3 ? 30 : 60 + heavy * 200) * area; k++) streaks.push(newStreak(true));
+        beads = []; if (wet) for (var b = 0; b < (rate < 0.3 ? 120 : 220 + heavy * 260) * area; b++) beads.push({ x: rnd(0, W), y: rnd(0, H), r: rnd(0.6, 2.2), life: 1 });
+        drops = []; if (wet) for (var m = 0; m < (rate < 0.3 ? 12 : 22 + heavy * 34) * area; m++) drops.push(newDrop(true));
+        flakes = []; if (WX.snow) for (var f = 0; f < (60 + Math.min(1, rate / 3) * 160) * area; f++) flakes.push({ x: rnd(0, W), y: rnd(0, H), r: rnd(1.2, 3.4), v: rnd(30, 70), p: rnd(0, 6.3) });
+      }
+      function newStreak(any) { return { x: rnd(-60, W + 60), y: any ? rnd(-H, H) : rnd(-120, -20), l: rnd(12, 26), v: rnd(650, 1000), a: rnd(0.12, 0.3) }; }
+      function newDrop(any) { return { x: rnd(0, W), y: any ? rnd(0, H) : rnd(-10, H * 0.6), r: rnd(2, 4.5), grow: rnd(0.2, 0.7), v: 0, run: false, go: 0, trail: [], lastBead: 0 }; }
+      // A bead of water on the glass: a dark rim at the bottom, a bright
+      // highlight at the top left, sky light gathered at the bottom inside.
+      function bead(x, y, r, stretch, alpha) {
+        var ry = r * stretch;
+        cx.globalAlpha = alpha;
+        cx.fillStyle = "rgba(10,20,40,0.22)"; cx.beginPath(); cx.ellipse(x, y + r * 0.25, r, ry, 0, 0, 6.2832); cx.fill();
+        var g = cx.createRadialGradient(x, y + ry * 0.35, r * 0.1, x, y, Math.max(r, ry));
+        g.addColorStop(0, "rgba(255,255,255,0.42)"); g.addColorStop(0.7, "rgba(255,255,255,0.10)"); g.addColorStop(1, "rgba(255,255,255,0.28)");
+        cx.fillStyle = g; cx.beginPath(); cx.ellipse(x, y, r, ry, 0, 0, 6.2832); cx.fill();
+        if (r > 1.4) { cx.fillStyle = "rgba(255,255,255,0.85)"; cx.beginPath(); cx.ellipse(x - r * 0.35, y - ry * 0.4, r * 0.28, ry * 0.2, -0.5, 0, 6.2832); cx.fill(); }
+        cx.globalAlpha = 1;
+      }
+      function frame(now) {
+        var dt = last ? Math.min(0.05, (now - last) / 1000) : 0.016; last = now;
+        cx.clearRect(0, 0, W, H);
+        var t = now / 1000, dx = drift(), slant = dx * Math.min(0.5, WX.wind / 40);
+        if (!WX.night && WX.clouds < 0.7 && WX.rain === 0) {
+          var gr = cx.createRadialGradient(W * 0.85, H * 0.08, 0, W * 0.85, H * 0.08, Math.max(W, H) * 0.55);
+          var a = (0.5 - WX.clouds * 0.5) * (0.9 + 0.1 * Math.sin(t * 0.4));
+          gr.addColorStop(0, "rgba(255,244,200," + a + ")"); gr.addColorStop(0.35, "rgba(255,236,170," + a * 0.35 + ")"); gr.addColorStop(1, "rgba(255,236,170,0)");
+          cx.fillStyle = gr; cx.fillRect(0, 0, W, H);
+        }
+        cx.fillStyle = "#fff";
+        stars.forEach(function (s) {
+          cx.globalAlpha = s.bright ? s.a * (0.6 + 0.4 * Math.sin(s.p + t * s.s * 6.2832)) : s.a;
+          cx.beginPath(); cx.arc(s.x, s.y, s.r, 0, 6.2832); cx.fill();
+        });
+        // A glint: a bright star flares with a faint four-point cross for about a second.
+        if (stars.length && !still) {
+          if (!nextGlint) nextGlint = t + rnd(6, 14);
+          if (!glint && t > nextGlint) {
+            var pool = stars.filter(function (s) { return s.bright; });
+            if (pool.length) glint = { s: pool[Math.floor(Math.random() * pool.length)], t0: t };
+            nextGlint = t + rnd(8, 20);
+          }
+          if (glint) {
+            var k = (t - glint.t0) / 1.1;
+            if (k >= 1) glint = null;
+            else {
+              var f = Math.sin(k * Math.PI), gs = glint.s, len = 3 + 7 * f;
+              cx.globalAlpha = 0.85 * f; cx.strokeStyle = "#fff"; cx.lineWidth = 0.8;
+              cx.beginPath(); cx.moveTo(gs.x - len, gs.y); cx.lineTo(gs.x + len, gs.y); cx.moveTo(gs.x, gs.y - len); cx.lineTo(gs.x, gs.y + len); cx.stroke();
+              cx.beginPath(); cx.arc(gs.x, gs.y, gs.r * (1 + 0.6 * f), 0, 6.2832); cx.fill();
+            }
+          }
+        }
+        cx.globalAlpha = 1;
+        // Clouds: 12 to 60 px a second with the wind, nearer ones faster.
+        clouds.forEach(function (c) {
+          c.x += (12 + Math.min(WX.wind, 40) * 1.2) * dx * c.k * dt;
+          if (dx > 0 && c.x > W + 20) c.x = -c.w - rnd(0, 200);
+          if (dx < 0 && c.x + c.w < -20) c.x = W + rnd(0, 200);
+          cx.globalAlpha = c.a; cx.drawImage(c.img, c.x, c.y, c.w, c.h);
+        });
+        cx.globalAlpha = 1;
+        if (WX.fog) for (var b = 0; b < 3; b++) {
+          var fy = H * (0.3 + b * 0.25), fx = ((t * (8 + b * 4)) % (W * 2)) - W * 0.5;
+          var fg = cx.createRadialGradient(fx, fy, 0, fx, fy, W * 0.7);
+          fg.addColorStop(0, "rgba(255,255,255,0.35)"); fg.addColorStop(1, "rgba(255,255,255,0)");
+          cx.fillStyle = fg; cx.fillRect(0, 0, W, H);
+        }
+        // Rain beyond the glass.
+        cx.lineCap = "round"; cx.lineWidth = 1;
+        streaks.forEach(function (r, i) {
+          r.y += r.v * dt; r.x += r.v * slant * dt;
+          if (r.y > H + 30) streaks[i] = newStreak(false);
+          cx.strokeStyle = (WX.night ? "rgba(200,215,240," : "rgba(255,255,255,") + r.a + ")";
+          cx.beginPath(); cx.moveTo(r.x, r.y); cx.lineTo(r.x - r.l * slant, r.y - r.l); cx.stroke();
+        });
+        // On the glass: still beads, slowly drying, new ones landing.
+        beads.forEach(function (d, i) {
+          d.life -= dt * 0.02;
+          if (d.life <= 0) beads[i] = { x: rnd(0, W), y: rnd(0, H), r: rnd(0.6, 2.2), life: 1 };
+          bead(d.x, d.y, d.r, 1.05, Math.min(1, d.life * 3));
+        });
+        drops.forEach(function (d, i) {
+          if (!d.run) { d.r += d.grow * dt; if (d.r > 5 && Math.random() < dt * 0.6) { d.run = true; d.go = rnd(0.4, 1.4); } }
+          else {
+            // Stop and go: a run, a pause, another run.
+            d.go -= dt;
+            if (d.go < 0) { d.go = Math.random() < 0.35 ? -rnd(0.2, 0.9) : rnd(0.4, 1.5); }
+            if (d.go > 0) { d.v = Math.min(220, d.v + 380 * dt); } else d.v = Math.max(0, d.v - 900 * dt);
+            d.y += d.v * dt; d.x += Math.sin(d.y * 0.04 + d.r) * 0.25;
+            if (d.v > 0) d.trail.push([d.x, d.y, t]);
+            if (d.y - d.lastBead > rnd(18, 40)) { d.lastBead = d.y; if (beads.length < 900) beads.push({ x: d.x + rnd(-1, 1), y: d.y - d.r * 2, r: rnd(0.6, 1.4), life: 1 }); }
+            d.r = Math.max(2.6, d.r - dt * 0.25);
+            if (d.y > H + 20) { drops[i] = newDrop(false); return; }
+          }
+          // The wet trail fades over a few seconds.
+          d.trail = d.trail.filter(function (p) { return t - p[2] < 4; });
+          if (d.trail.length > 1) {
+            cx.lineWidth = Math.max(1, d.r * 0.55);
+            for (var k = 1; k < d.trail.length; k++) {
+              cx.strokeStyle = "rgba(255,255,255," + (0.16 * (1 - (t - d.trail[k][2]) / 4)).toFixed(3) + ")";
+              cx.beginPath(); cx.moveTo(d.trail[k - 1][0], d.trail[k - 1][1]); cx.lineTo(d.trail[k][0], d.trail[k][1]); cx.stroke();
+            }
+          }
+          bead(d.x, d.y, d.r, d.run && d.v > 20 ? 1.35 : 1.1, 1);
+        });
+        flakes.forEach(function (f) {
+          f.y += f.v * dt; f.x += (Math.sin(t + f.p) * 12 + WX.wind * dx * 1.5) * dt;
+          if (f.y > H + 5) { f.y = -5; f.x = rnd(0, W); } if (f.x > W + 5) f.x = -5; if (f.x < -5) f.x = W + 5;
+          cx.fillStyle = "rgba(255,255,255,0.85)"; cx.beginPath(); cx.arc(f.x, f.y, f.r, 0, 6.2832); cx.fill();
+        });
+        if (WX.storm && !still) {
+          if (!nextFlash) nextFlash = t + rnd(6, 16);
+          if (t > nextFlash) { flash = 1; nextFlash = t + rnd(6, 16); }
+          if (flash > 0) { cx.fillStyle = "rgba(235,240,255," + flash * 0.55 + ")"; cx.fillRect(0, 0, W, H); flash -= dt * 4; }
+        }
+        if (!still && !document.hidden) raf = requestAnimationFrame(frame); else raf = 0;
+      }
+      function start() { cancelAnimationFrame(raf); raf = 0; last = 0; if (still) frame(performance.now()); else raf = requestAnimationFrame(frame); }
+      var built = "", resizeT = 0;
+      addEventListener("resize", function () { clearTimeout(resizeT); resizeT = setTimeout(function () { size(); build(); if (still) start(); }, 200); });
+      document.addEventListener("visibilitychange", function () { if (!document.hidden && !raf) start(); });
+      size();
+      return {
+        update: function () {
+          var key = [WX.kind, WX.night, Math.round(WX.rain * 10), WX.snow, Math.round(WX.clouds * 10), WX.fog, WX.storm].join();
+          if (key !== built) { built = key; build(); }
+          if (!raf) start();
+        },
+        // For a look at another weather: skyPreview("rain", 3) in the console.
+        preview: function (kind, rate) { WX.kind = kind; WX.rain = rate || 0; WX.snow = kind === "snow"; WX.storm = kind === "storm"; WX.clouds = kind === "clear" ? 0.05 : 0.9; built = ""; this.update(); }
+      };
+    })();
+
+    window.skyPreview = function (kind, rate) { skyFx.preview(kind, rate); };
 
     function stamp() {
       if (!data || !data.observed) return;
@@ -1886,8 +2229,7 @@
       var current = function () { return grids.map(function (g) { return tilesOf(g).map(function (t) { return t.dataset.tile; }); }); };
 
       // Puts a grid's tiles in the given order in the slots tiles already
-      // hold, so headings between them (the chart span buttons) stay put.
-      // Tiles the saved order does not know keep their own slot.
+      // hold. Tiles the saved order does not know keep their own slot.
       function arrange(g, keys) {
         var tiles = tilesOf(g), by = {};
         tiles.forEach(function (t) { by[t.dataset.tile] = t; });
@@ -1896,7 +2238,19 @@
         var marks = tiles.map(function (t) { var m = document.createComment(""); g.replaceChild(m, t); return m; });
         marks.forEach(function (m, i) { g.replaceChild(order[i], m); });
       }
+      // A heading travels with the boxes it heads (Stan, 5 Nov 2026): the
+      // Charts heading and its 24 hours / 7 days / 30 days buttons sit right
+      // before the first chart, wherever the charts were moved.
+      function placeHeads() {
+        grids.forEach(function (g) {
+          [].forEach.call(g.querySelectorAll(":scope > .range-bar[data-heads]"), function (h) {
+            var first = [].filter.call(g.children, function (el) { return el.classList.contains("tile") && el.matches(h.dataset.heads); })[0];
+            if (first && h.nextElementSibling !== first) g.insertBefore(h, first);
+          });
+        });
+      }
       function save() {
+        placeHeads();
         var now = current(), moved = JSON.stringify(now) !== JSON.stringify(defaults);
         try { if (moved) localStorage.setItem(LAYOUT_KEY, JSON.stringify(now)); else localStorage.removeItem(LAYOUT_KEY); } catch (e) {}
         $("layout-reset").hidden = !moved;
@@ -1906,6 +2260,7 @@
         var saved = JSON.parse(localStorage.getItem(LAYOUT_KEY) || "null");
         if (Array.isArray(saved)) grids.forEach(function (g, i) { if (Array.isArray(saved[i])) arrange(g, saved[i]); });
       } catch (e) {}
+      placeHeads();
       $("layout-reset").hidden = JSON.stringify(current()) === JSON.stringify(defaults);
       $("layout-reset-btn").addEventListener("click", function () {
         grids.forEach(function (g, i) { arrange(g, defaults[i]); });
