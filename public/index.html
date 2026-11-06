@@ -498,6 +498,47 @@
       -webkit-backdrop-filter: blur(12px) saturate(1.3); backdrop-filter: blur(12px) saturate(1.3); }
     .tile::before { content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none;
       background: var(--card, #fff); opacity: 0.86; }
+    /* Light or dark (Stan, 5 Nov 2026): a switch in the top bar. Auto follows
+       the sky (dark at night and in a storm); Light keeps a daytime sky and
+       light cards; Dark uses the night sky and turns the light cards to dark
+       glass. The colored cards stay as they are. */
+    .theme { display: inline-flex; gap: 2px; padding: 3px; border-radius: 999px; background: rgba(255,255,255,0.16); border: 1px solid rgba(255,255,255,0.28);
+      -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
+    .theme button { display: inline-flex; align-items: center; gap: 0.35rem; min-height: 36px; padding: 0 0.75rem; border: 0; border-radius: 999px;
+      background: transparent; color: #fff; font: inherit; font-weight: 700; font-size: 0.85rem; cursor: pointer; }
+    .theme button svg { width: 16px; height: 16px; flex: none; }
+    .theme button[aria-pressed="true"] { background: rgba(255,255,255,0.92); color: var(--ink); }
+    .theme button:focus-visible { outline: 3px solid var(--sun); outline-offset: 2px; }
+    .nav-right { display: flex; align-items: center; gap: 0.8rem; }
+    @media (max-width: 640px) { .theme button span { display: none; } .theme button { padding: 0 0.6rem; } }
+
+    body.theme-dark { color-scheme: dark; }
+    body.theme-dark .chart, body.theme-dark .rose, body.theme-dark .hs, body.theme-dark .watch:not(.freeze):not(.danger) { --card: #1B1E2C; color: #ECEEF6; }
+    body.theme-dark .watch { border-color: rgba(255,255,255,0.22); }
+    body.theme-dark .watch.frost { --card: #1D3654; } body.theme-dark .watch.heat { --card: #4A3418; }
+    body.theme-dark .season { --card: rgba(10,12,24,0.5); }
+    body.theme-dark .chart h2, body.theme-dark .records h2, body.theme-dark .chart-range .hi { color: #FF8F66; }
+    body.theme-dark .rose h2, body.theme-dark .wind-chart h2, body.theme-dark .yoy h2, body.theme-dark .chart-range .lo { color: #86B6EF; }
+    body.theme-dark .rainsum h2 { color: #B49CFF; } body.theme-dark .garden h2 { color: #6FD39B; }
+    body.theme-dark #chart text, body.theme-dark #w-chart text, body.theme-dark #rose .ring-label, body.theme-dark #rose-track text,
+    body.theme-dark .rose-track-head span:first-child { fill: #A6ABC0; color: #A6ABC0; }
+    body.theme-dark #rose text { fill: #ECEEF6; }
+    body.theme-dark #rose .ring-label, body.theme-dark #rose-track text { fill: #A6ABC0; }
+    body.theme-dark [stroke="#EEE9F5"], body.theme-dark [stroke="#F4F1F9"], body.theme-dark [stroke="#DCD6E8"] { stroke: rgba(255,255,255,0.13); }
+    body.theme-dark #chart [stroke="rgba(255,255,255,0.75)"], body.theme-dark #w-chart [stroke="rgba(255,255,255,0.75)"] { stroke: rgba(255,255,255,0.14); }
+    body.theme-dark #chart [fill="url(#cSky)"] { opacity: 0.22; }
+    body.theme-dark [fill="#F5F2FA"] { fill: rgba(255,255,255,0.04); }
+    body.theme-dark #rose path[stroke="#fff"], body.theme-dark #rose-track circle[stroke="#fff"], body.theme-dark #chart circle[stroke="#fff"], body.theme-dark #w-chart circle[stroke="#fff"] { stroke: #1B1E2C; }
+    body.theme-dark .rose-calm .rc-move { background: #9C96BC; } body.theme-dark .rose-calm .rc-still { background: #3A3D52; }
+    body.theme-dark .rose-calm .rc-lab { color: #A6ABC0; }
+    body.theme-dark .hs .stat-row { border-color: rgba(255,255,255,0.1); }
+    body.theme-dark .hs .stat-row small, body.theme-dark .hs-empty, body.theme-dark .yoy-cell span, body.theme-dark .yoy-cell small, body.theme-dark .yoy-wait { color: #A6ABC0; }
+    body.theme-dark .yoy-cell { background: rgba(255,255,255,0.06); }
+    body.theme-dark .seg { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.3); }
+    body.theme-dark .seg button { color: #fff; } body.theme-dark .seg button[aria-pressed="true"] { background: #fff; color: var(--ink); }
+    body.theme-dark .layout-reset { color: #fff; }
+    body.theme-dark .about { background: repeating-linear-gradient(-45deg, #1B1E2C, #1B1E2C 14px, #22263A 14px, #22263A 28px); border-color: rgba(255,255,255,0.22); color: #ECEEF6; }
+    body.theme-dark .about .source a { color: #FFC93C; }
   </style>
 </head>
 <body class="skeleton">
@@ -511,7 +552,14 @@
         <li><a href="/#about">About</a></li>
         <li><a href="/#faq">FAQ</a></li>
       </ul>
-      <a href="/#contact" class="nav-cta">Work with me</a>
+      <div class="nav-right">
+        <div class="theme" role="group" aria-label="Page style">
+          <button type="button" data-theme="auto" aria-pressed="true" title="Follow the sky: dark at night"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor"/></svg><span>Auto</span></button>
+          <button type="button" data-theme="light" aria-pressed="false" title="Light style"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg><span>Light</span></button>
+          <button type="button" data-theme="dark" aria-pressed="false" title="Dark style"><svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M20.5 14.6A8.5 8.5 0 0 1 9.4 3.5a8.5 8.5 0 1 0 11.1 11.1z"/></svg><span>Dark</span></button>
+        </div>
+        <a href="/#contact" class="nav-cta">Work with me</a>
+      </div>
     </div>
   </nav>
 
@@ -1955,8 +2003,23 @@
     // what a clear sky gives at this sun height (Haurwitz); at night, from the
     // barometer's forecast. Reduced motion: one still frame. Uses sunElevation
     // and the Haurwitz clear sky, as skyWord does.
+    var THEME_KEY = "altilead-weather-theme", theme = "auto", lastSky = null;
+    try { theme = localStorage.getItem(THEME_KEY) || "auto"; } catch (e) {}
+    if (["auto", "light", "dark"].indexOf(theme) < 0) theme = "auto";
+    function themeButtons() { document.querySelectorAll(".theme button").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.theme === theme)); }); }
+    themeButtons();
+    if (theme === "dark") document.body.classList.add("theme-dark");
+    document.querySelectorAll(".theme button").forEach(function (b) {
+      b.addEventListener("click", function () {
+        theme = b.dataset.theme;
+        try { if (theme === "auto") localStorage.removeItem(THEME_KEY); else localStorage.setItem(THEME_KEY, theme); } catch (e) {}
+        themeButtons();
+        if (lastSky) setSky.apply(null, lastSky); else document.body.classList.toggle("theme-dark", theme === "dark");
+      });
+    });
     var WX = { kind: "clear", night: false, rain: 0, snow: false, clouds: 0, wind: 0, dir: 270, fog: false, storm: false };
     function setSky(n, precip, storm, forecastState) {
+      lastSky = [n, precip, storm, forecastState];
       var elev = sunElevation(Date.now()), night = elev < -4, dusk = !night && elev < 6;
       var clouds = 0.3;
       if (elev > 10 && n.solar != null) {
@@ -1970,11 +2033,16 @@
       var kind = storm ? "storm" : precip > 0 ? (snow ? "snow" : "rain") : fog ? "fog" : clouds > 0.7 ? "cloudy" : clouds > 0.25 ? "partly" : "clear";
       var look = night ? (kind === "rain" || kind === "storm" ? "night-rain" : kind === "clear" || kind === "partly" ? "night" : "night-cloudy") :
         dusk && (kind === "clear" || kind === "partly") ? "dusk" : kind;
+      // The page style: Auto follows the sky, Light and Dark hold.
+      var darkNow = theme === "dark" || (theme === "auto" && (night || storm)), seenNight = theme === "auto" ? night : theme === "dark";
+      look = seenNight ? (kind === "rain" || kind === "storm" ? "night-rain" : kind === "clear" || kind === "partly" ? "night" : "night-cloudy") :
+        theme === "auto" && dusk && (kind === "clear" || kind === "partly") ? "dusk" : kind;
+      document.body.classList.toggle("theme-dark", darkNow);
       document.body.setAttribute("data-sky", look);
       $("hero-sky").textContent = storm ? "Thunderstorm" : precip > 0 ? (snow ? "Snow" : precip < 0.3 ? "Light drizzle" : precip < 2.5 ? "Light rain" : precip < 7.6 ? "Rain" : "Heavy rain") :
         fog ? "Fog" : kind === "cloudy" ? (night ? "Cloudy night" : "Cloudy") : kind === "partly" ? (night ? "Some clouds" : "Partly cloudy") : night ? "Clear night" : "Clear";
-      document.body.classList.toggle("sky-dark", night || kind === "storm");
-      WX = { kind: kind, night: night, rain: precip, snow: snow, clouds: precip > 0 || kind === "cloudy" ? Math.max(clouds, 0.85) : clouds,
+      document.body.classList.toggle("sky-dark", seenNight || kind === "storm");
+      WX = { kind: kind, night: seenNight, rain: precip, snow: snow, clouds: precip > 0 || kind === "cloudy" ? Math.max(clouds, 0.85) : clouds,
         wind: n.wind_speed || 0, dir: n.wind_dir_avg10 != null ? n.wind_dir_avg10 : n.wind_dir != null ? n.wind_dir : 270, fog: fog, storm: storm };
       skyFx.update();
     }
@@ -1983,12 +2051,14 @@
     // lit from above, shaded below) and slide across the top of the screen
     // with the wind, nearer ones bigger and faster. Rain is a window: still
     // beads and fine mist on the glass, bigger drops that swell, then run down
-    // in stops and starts, leaving a wet trail and a few beads behind, while
-    // thin streaks fall beyond the glass (Stan, 5 Nov 2026).
+    // in stops and starts, leaving a short wet trail and a few beads behind,
+    // while short hairline streaks fall beyond the glass, faster and longer
+    // the harder it rains, and splash on the top edge of the cards (Stan,
+    // 5 and 6 Nov 2026, after Apple's Weather app).
     var skyFx = (function () {
       var cv = $("sky-fx"), cx = cv.getContext("2d"), W = 0, H = 0, dpr = 1, raf = 0, last = 0;
       var still = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
-      var stars = [], clouds = [], streaks = [], drops = [], beads = [], flakes = [], flash = 0, nextFlash = 0, glint = null, nextGlint = 0;
+      var stars = [], clouds = [], streaks = [], drops = [], beads = [], flakes = [], splashes = [], edges = [], edgesAt = -9, flash = 0, nextFlash = 0, glint = null, nextGlint = 0;
       var rnd = function (a, b) { return a + Math.random() * (b - a); };
       function size() {
         dpr = Math.min(window.devicePixelRatio || 1, 1.5); W = innerWidth; H = innerHeight;
@@ -2038,13 +2108,38 @@
             a: (WX.night ? 0.75 : 0.9) * (0.55 + near * 0.45) });
         }
         clouds.sort(function (a, b) { return a.k - b.k; });
-        var rate = WX.rain, wet = rate > 0 && !WX.snow, heavy = Math.min(1, rate / 8);
-        streaks = []; if (wet) for (var k = 0; k < (rate < 0.3 ? 30 : 60 + heavy * 200) * area; k++) streaks.push(newStreak(true));
+        var rate = WX.rain, wet = rate > 0 && !WX.snow;
+        heavy = Math.min(1, rate / 8);
+        streaks = []; splashes = []; edgesAt = -9; if (wet) for (var k = 0; k < (rate < 0.3 ? 30 : 60 + heavy * 200) * area; k++) streaks.push(newStreak(true));
         beads = []; if (wet) for (var b = 0; b < (rate < 0.3 ? 120 : 220 + heavy * 260) * area; b++) beads.push({ x: rnd(0, W), y: rnd(0, H), r: rnd(0.6, 2.2), life: 1 });
         drops = []; if (wet) for (var m = 0; m < (rate < 0.3 ? 12 : 22 + heavy * 34) * area; m++) drops.push(newDrop(true));
         flakes = []; if (WX.snow) for (var f = 0; f < (60 + Math.min(1, rate / 3) * 160) * area; f++) flakes.push({ x: rnd(0, W), y: rnd(0, H), r: rnd(1.2, 3.4), v: rnd(30, 70), p: rnd(0, 6.3) });
       }
-      function newStreak(any) { return { x: rnd(-60, W + 60), y: any ? rnd(-H, H) : rnd(-120, -20), l: rnd(12, 26), v: rnd(650, 1000), a: rnd(0.12, 0.3) }; }
+      // Drizzle falls at about 400 px a second, a downpour at about 1,300;
+      // the streak is the distance a drop covers in 1/45 s, so heavy rain
+      // draws longer lines.
+      var heavy = 0;
+      function newStreak(any) {
+        var v = (380 + heavy * 900) * rnd(0.8, 1.2);
+        return { x: rnd(-60, W + 60), y: any ? rnd(-H, H) : rnd(-120, -20), py: -1e9, l: v / 45, v: v, a: rnd(0.14, 0.32) };
+      }
+      // The top edges of the cards in view, where rain lands and splashes.
+      // Measured again on scroll and at most once a second.
+      function measure(t) {
+        edges = []; edgesAt = t;
+        document.querySelectorAll(".tile").forEach(function (el) {
+          if (el.parentElement.closest(".tile")) return;
+          var r = el.getBoundingClientRect();
+          if (r.top > 0 && r.top < H && r.width > 0) edges.push([r.left + 10, r.right - 10, r.top]);
+        });
+      }
+      addEventListener("scroll", function () { edgesAt = -9; }, { passive: true });
+      function splash(x, y) {
+        if (splashes.length > 260) return;
+        splashes.push({ ring: true, x: x, y: y, life: 0.18, w: rnd(2.5, 4.5) + heavy * 3 });
+        for (var n = 0, m = 2 + Math.round(Math.random() * (1 + heavy * 2)); n < m; n++)
+          splashes.push({ x: x, y: y - 1, vx: rnd(-70, 70), vy: -rnd(70, 140) * (0.7 + heavy * 0.6), life: rnd(0.25, 0.4), r: rnd(0.6, 1.1) });
+      }
       function newDrop(any) { return { x: rnd(0, W), y: any ? rnd(0, H) : rnd(-10, H * 0.6), r: rnd(2, 4.5), grow: rnd(0.2, 0.7), v: 0, run: false, go: 0, trail: [], lastBead: 0 }; }
       // A bead of water on the glass: a dark rim at the bottom, a bright
       // highlight at the top left, sky light gathered at the bottom inside.
@@ -2107,13 +2202,33 @@
           fg.addColorStop(0, "rgba(255,255,255,0.35)"); fg.addColorStop(1, "rgba(255,255,255,0)");
           cx.fillStyle = fg; cx.fillRect(0, 0, W, H);
         }
-        // Rain beyond the glass.
-        cx.lineCap = "round"; cx.lineWidth = 1;
+        // Rain beyond the glass: hairlines that splash where they meet a card.
+        if (streaks.length && t - edgesAt > 1) measure(t);
+        var tint = WX.night ? "rgba(200,215,240," : "rgba(255,255,255,";
+        cx.lineCap = "round"; cx.lineWidth = 0.7;
         streaks.forEach(function (r, i) {
-          r.y += r.v * dt; r.x += r.v * slant * dt;
-          if (r.y > H + 30) streaks[i] = newStreak(false);
-          cx.strokeStyle = (WX.night ? "rgba(200,215,240," : "rgba(255,255,255,") + r.a + ")";
+          r.py = r.y; r.y += r.v * dt; r.x += r.v * slant * dt;
+          for (var e = 0; e < edges.length; e++) {
+            var g = edges[e];
+            if (r.x > g[0] && r.x < g[1] && r.py < g[2] && r.y >= g[2]) { splash(r.x, g[2]); streaks[i] = newStreak(false); return; }
+          }
+          if (r.y > H + 30) { streaks[i] = newStreak(false); return; }
+          cx.strokeStyle = tint + r.a + ")";
           cx.beginPath(); cx.moveTo(r.x, r.y); cx.lineTo(r.x - r.l * slant, r.y - r.l); cx.stroke();
+        });
+        // Splashes: a brief flat ring and a few droplets thrown up and out.
+        splashes = splashes.filter(function (p) {
+          p.life -= dt;
+          if (p.life <= 0) return false;
+          if (p.ring) {
+            cx.strokeStyle = tint + (p.life / 0.18 * 0.45).toFixed(3) + ")"; cx.lineWidth = 0.7;
+            cx.beginPath(); cx.ellipse(p.x, p.y - 0.5, p.w * (1.4 - p.life / 0.18 * 0.6), 1, 0, 3.1416, 6.2832); cx.stroke();
+          } else {
+            p.vy += 700 * dt; p.x += p.vx * dt; p.y += p.vy * dt;
+            cx.fillStyle = tint + Math.min(0.6, p.life * 2).toFixed(3) + ")";
+            cx.beginPath(); cx.arc(p.x, p.y, p.r, 0, 6.2832); cx.fill();
+          }
+          return true;
         });
         // On the glass: still beads, slowly drying, new ones landing.
         beads.forEach(function (d, i) {
@@ -2128,18 +2243,18 @@
             d.go -= dt;
             if (d.go < 0) { d.go = Math.random() < 0.35 ? -rnd(0.2, 0.9) : rnd(0.4, 1.5); }
             if (d.go > 0) { d.v = Math.min(220, d.v + 380 * dt); } else d.v = Math.max(0, d.v - 900 * dt);
-            d.y += d.v * dt; d.x += Math.sin(d.y * 0.04 + d.r) * 0.25;
+            d.y += d.v * dt; d.x += Math.sin(d.y * 0.04 + d.r) * 0.08;
             if (d.v > 0) d.trail.push([d.x, d.y, t]);
             if (d.y - d.lastBead > rnd(18, 40)) { d.lastBead = d.y; if (beads.length < 900) beads.push({ x: d.x + rnd(-1, 1), y: d.y - d.r * 2, r: rnd(0.6, 1.4), life: 1 }); }
             d.r = Math.max(2.6, d.r - dt * 0.25);
             if (d.y > H + 20) { drops[i] = newDrop(false); return; }
           }
-          // The wet trail fades over a few seconds.
-          d.trail = d.trail.filter(function (p) { return t - p[2] < 4; });
+          // A short, faint wet trail: gone within a second, never more than about 50 px.
+          d.trail = d.trail.filter(function (p) { return t - p[2] < 0.9 && d.y - p[1] < 50; });
           if (d.trail.length > 1) {
-            cx.lineWidth = Math.max(1, d.r * 0.55);
+            cx.lineWidth = Math.max(0.6, d.r * 0.22);
             for (var k = 1; k < d.trail.length; k++) {
-              cx.strokeStyle = "rgba(255,255,255," + (0.16 * (1 - (t - d.trail[k][2]) / 4)).toFixed(3) + ")";
+              cx.strokeStyle = "rgba(255,255,255," + (0.12 * (1 - (t - d.trail[k][2]) / 0.9)).toFixed(3) + ")";
               cx.beginPath(); cx.moveTo(d.trail[k - 1][0], d.trail[k - 1][1]); cx.lineTo(d.trail[k][0], d.trail[k][1]); cx.stroke();
             }
           }
