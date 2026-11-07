@@ -176,6 +176,7 @@
     .rain { grid-column: span 7; --card: var(--violet); color: #fff; }
     .press { grid-column: span 5; --card: var(--ink); color: #fff; }
     .sun { grid-column: span 4; --card: var(--sun); color: var(--ink); }
+    .sunset { grid-column: span 4; --card: linear-gradient(180deg, #2A5AA6 0%, #5C8FD6 100%); color: #fff; }
     .dew { grid-column: span 4; --card: var(--lime); color: var(--ink); }
     .forecast { grid-column: span 12; --card: linear-gradient(135deg, #14112B 0%, #2A1A5E 55%, #4B2391 100%); color: #fff; display: grid; grid-template-columns: auto 1fr 1.1fr; gap: 1.6rem; align-items: center; }
     .forecast h2 { color: var(--sun); opacity: 1; margin-bottom: 0.3rem; }
@@ -207,10 +208,10 @@
     /* Row two: today so far and the wind rose. Row four adds VPD; row five the watch, lightning and sensor power. */
     .today { grid-column: span 6; --card: var(--hot); color: #fff; }
     .rose { grid-column: span 6; --card: #fff; color: var(--ink); }
-    .vpd { grid-column: span 4; --card: #167A44; color: #fff; }
-    .power { grid-column: span 4; --card: #2A2546; color: #fff; }
-    .lightning { grid-column: span 4; --card: #24325F; color: #fff; }
-    .watch { grid-column: span 4; --card: #fff; color: var(--ink); border: 3px solid var(--ink); }
+    .vpd { grid-column: span 6; --card: #167A44; color: #fff; }
+    .power { grid-column: span 6; --card: #2A2546; color: #fff; }
+    .lightning { grid-column: span 6; --card: #24325F; color: #fff; }
+    .watch { grid-column: span 6; --card: #fff; color: var(--ink); border: 3px solid var(--ink); }
     .watch.frost { --card: #CDEBFF; }
     .watch.freeze { --card: #1F3A73; color: #fff; border-color: #1F3A73; }
     .watch.heat { --card: #FFB347; }
@@ -289,9 +290,17 @@
     .gauge { width: 100%; max-width: 260px; display: block; margin: 0.4rem auto 0; }
     .gauge .needle { transform-origin: 130px 130px; transition: transform 1s cubic-bezier(.3,1.6,.5,1); }
 
-    .uv-scale { display: flex; gap: 4px; margin-top: 1rem; background: var(--ink); padding: 5px; border-radius: 12px; }
-    .uv-scale i { flex: 1; height: 14px; border-radius: 7px; opacity: 0.4; }
-    .uv-scale i.on { opacity: 1; box-shadow: 0 0 0 2px #fff; }
+    /* UV and sunset boxes after Apple's Weather app (Stan, 7 Nov 2026): one
+       colour bar with a dot at today's value; the sun's arc through the day. */
+    .uv-bar { position: relative; height: 8px; margin: 1.1rem 0 0.2rem; border-radius: 4px;
+      background: linear-gradient(90deg, #3BB273 0%, #9BCB3C 18%, #F2C14E 32%, #F28C28 55%, #E4572E 75%, #B23AC8 92%, #7B3FF2 100%);
+      box-shadow: inset 0 0 0 1px rgba(20,17,43,0.25); }
+    .uv-bar i { position: absolute; top: 50%; width: 13px; height: 13px; border-radius: 50%; background: #fff; border: 2.5px solid var(--ink); transform: translate(-50%, -50%); transition: left 1s; }
+    .uv-advice { margin-top: 0.7rem; font-weight: 600; }
+    .sun-solar { margin-top: 0.4rem; font-size: 0.85rem; font-weight: 600; opacity: 0.75; }
+    .ss-time { font-family: 'Bricolage Grotesque', sans-serif; font-weight: 300; font-size: clamp(2.6rem, 5vw, 3.4rem); line-height: 1; font-variant-numeric: tabular-nums; }
+    .ss-arc { display: block; width: 100%; height: auto; margin: 0.6rem 0 0.2rem; overflow: hidden; }
+    .ss-sub { font-weight: 600; opacity: 0.9; }
     .sun-row { display: flex; gap: 2rem; flex-wrap: wrap; }
 
     .chart-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; flex-wrap: wrap; }
@@ -413,7 +422,7 @@
     @media (max-width: 900px) {
       .hero-inner { grid-template-columns: 1fr; }
       .big-temp, .temp-meta { text-align: left; justify-content: flex-start; }
-      .wind, .humid, .feels, .rain, .press, .sun, .dew, .today, .rose, .vpd, .watch, .power, .lightning { grid-column: span 12; }
+      .wind, .humid, .feels, .rain, .press, .sun, .sunset, .dew, .today, .rose, .vpd, .watch, .power, .lightning { grid-column: span 12; }
       .rain-row, .rain-row2 { grid-template-columns: 1fr 1fr; }
     }
     @media (max-width: 640px) {
@@ -432,10 +441,13 @@
        drifting clouds, stars), never on the cards. Colors come from data-sky. */
     .sky { position: fixed; inset: 0; z-index: 0; pointer-events: none; background: var(--sky-bg, linear-gradient(180deg, #9CC8F5, #EAF3FD)); transition: background 2s ease; }
     .sky canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+    /* Dark style by day: the real sky, dimmed, never a made-up night (Stan, 7 Nov 2026). */
+    .sky::after { content: ""; position: absolute; inset: 0; background: rgba(6,10,28,0.5); opacity: 0; transition: opacity 1s; }
+    body.theme-dark:not([data-sky^="night"]) .sky::after { opacity: 1; }
     .hero { z-index: 1; }
     footer { position: relative; z-index: 2; }
-    body[data-sky="clear"] { --sky-bg: linear-gradient(180deg, #5FA8F0 0%, #9CCBF7 45%, #E3F1FD 100%); }
-    body[data-sky="partly"] { --sky-bg: linear-gradient(180deg, #7FA9D6 0%, #B4CDE8 50%, #EAF0F7 100%); }
+    body[data-sky="clear"] { --sky-bg: linear-gradient(180deg, #1C5BB5 0%, #3478CF 35%, #5E9BDF 70%, #8DBCEB 100%); }
+    body[data-sky="partly"] { --sky-bg: linear-gradient(180deg, #3767A6 0%, #5A88C2 45%, #8FB2DA 100%); }
     body[data-sky="cloudy"] { --sky-bg: linear-gradient(180deg, #9AA6B6 0%, #C3CAD4 50%, #E5E8EC 100%); }
     body[data-sky="rain"] { --sky-bg: linear-gradient(180deg, #6B7889 0%, #97A3B2 50%, #C7CED8 100%); }
     body[data-sky="storm"] { --sky-bg: linear-gradient(180deg, #353B4C 0%, #5A6275 55%, #8790A0 100%); }
@@ -628,15 +640,19 @@
           <div class="sub">Gusts <span id="w-gust">…</span> · blowing from <span id="w-from">…</span></div>
         </div>
         <svg class="compass" viewBox="0 0 150 150" role="img" aria-label="Wind direction">
-          <circle cx="75" cy="75" r="66" fill="rgba(255,255,255,0.14)" stroke="#fff" stroke-width="3" />
-          <circle cx="75" cy="75" r="50" fill="none" stroke="rgba(255,255,255,0.35)" stroke-dasharray="2 6" stroke-width="3" />
-          <g fill="#fff" font-family="Bricolage Grotesque, sans-serif" font-weight="800" font-size="15" text-anchor="middle">
-            <text x="75" y="24">N</text><text x="131" y="80">E</text><text x="75" y="137">S</text><text x="19" y="80">W</text>
+          <circle cx="75" cy="75" r="68" fill="rgba(255,255,255,0.1)" />
+          <circle cx="75" cy="75" r="64" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="7" stroke-dasharray="0.9 4.685" />
+          <g fill="#fff" font-family="Bricolage Grotesque, sans-serif" font-weight="800" font-size="13" text-anchor="middle">
+            <text x="75" y="35">N</text><text x="119" y="79.5">E</text><text x="75" y="124">S</text><text x="31" y="79.5">W</text>
           </g>
-          <g class="arrow" id="w-arrow">
-            <path d="M75 28 L88 82 L75 72 L62 82 Z" fill="#FFC93C" stroke="#14112B" stroke-width="2.5" stroke-linejoin="round" />
-            <circle cx="75" cy="75" r="7" fill="#14112B" />
+          <g class="arrow" id="w-arrow" stroke="#fff" stroke-width="2.6" stroke-linecap="round">
+            <line x1="75" y1="131" x2="75" y2="100" /><line x1="75" y1="50" x2="75" y2="24" />
+            <circle cx="75" cy="131" r="4.5" fill="#fff" stroke="none" />
+            <path d="M75 13 L83 27 L67 27 Z" fill="#fff" stroke-linejoin="round" />
           </g>
+          <circle cx="75" cy="75" r="23" fill="rgba(20,17,43,0.28)" />
+          <text id="w-c-speed" x="75" y="78" fill="#fff" font-family="Bricolage Grotesque, sans-serif" font-weight="800" font-size="19" text-anchor="middle">…</text>
+          <text id="w-c-unit" x="75" y="91" fill="#fff" opacity="0.85" font-family="DM Sans, sans-serif" font-weight="700" font-size="9" text-anchor="middle">km/h</text>
         </svg>
       </section>
 
@@ -714,12 +730,19 @@
       </section>
 
       <section class="tile sun">
-        <h2>Sun &amp; UV</h2>
-        <div class="sun-row">
-          <div><div class="val"><span id="s-uvi">…</span><small>UV</small></div><div class="sub" id="s-word">&nbsp;</div></div>
-          <div><div class="val"><span id="s-solar">…</span><small>W/m²</small></div><div class="sub" id="s-sky">solar radiation</div></div>
-        </div>
-        <div class="uv-scale" id="uv-scale" aria-hidden="true"></div>
+        <h2>UV index</h2>
+        <div class="val"><span id="s-uvi">…</span></div>
+        <div class="real" id="s-word">&nbsp;</div>
+        <div class="uv-bar" aria-hidden="true"><i id="uv-dot" style="left:0%"></i></div>
+        <p class="uv-advice" id="s-advice">&nbsp;</p>
+        <p class="sun-solar"><span id="s-solar">…</span> W/m² <span id="s-sky">solar radiation</span></p>
+      </section>
+
+      <section class="tile sunset">
+        <h2 id="ss-label">Sunset</h2>
+        <div class="ss-time" id="ss-time">…</div>
+        <svg class="ss-arc" id="ss-arc" viewBox="0 0 300 96" aria-hidden="true"></svg>
+        <div class="ss-sub" id="ss-sub">&nbsp;</div>
       </section>
 
       <section class="tile dew">
@@ -949,7 +972,6 @@
       if (c < 26) return "T-shirt weather";
       return "Find some shade";
     }
-    var UV_COLORS = ["#3BB273","#3BB273","#3BB273","#F2C14E","#F2C14E","#F2C14E","#F28C28","#F28C28","#E4572E","#E4572E","#E4572E","#7B3FF2"];
     // The sun's height over Princeton (degrees) at a moment, from the standard
     // solar position formulas; good to a fraction of a degree.
     function sunElevation(ms) {
@@ -1769,6 +1791,34 @@
       return p;
     }
 
+    // Sunrise and sunset box: the next of the two in big type, the other
+    // below, and the sun's height through the day as a curve centred on
+    // solar noon, the bright part above the horizon, a dot for now.
+    function drawSunset() {
+      var now = Date.now(), p = nyDate(new Date(now)), st = sunTimes(p.year, p.month, p.day);
+      var noon = (st.rise + st.set) / 2;
+      if (now > noon + 12 * 3600000) { var nx = nyDate(new Date(now + 86400000)); st = sunTimes(nx.year, nx.month, nx.day); noon = (st.rise + st.set) / 2; }
+      var before = now < st.rise, up = !before && now < st.set, next = up ? st.set : before ? st.rise : null;
+      if (next === null) { var tm = nyDate(new Date(now + 86400000)); next = sunTimes(tm.year, tm.month, tm.day).rise; }
+      $("ss-label").textContent = up ? "Sunset" : "Sunrise";
+      $("ss-time").textContent = clockTime.format(new Date(next));
+      var len = Math.round((st.set - st.rise) / 60000);
+      $("ss-sub").textContent = (up ? "Sunrise " + clockTime.format(new Date(st.rise)) : "Sunset " + clockTime.format(new Date(st.set))) +
+        " · " + Math.floor(len / 60) + " h " + (len % 60) + " min of daylight";
+      var H0 = 58, k = 0.75, pts = [];
+      for (var i = 0; i <= 60; i++) {
+        var t = noon - 12 * 3600000 + i * 24 * 3600000 / 60;
+        pts.push((i * 5).toFixed(1) + " " + (H0 - sunElevation(t) * k).toFixed(1));
+      }
+      var d = "M" + pts.join(" L"), x = Math.max(0, Math.min(300, (now - noon + 12 * 3600000) / (24 * 3600000) * 300)), y = H0 - sunElevation(now) * k;
+      $("ss-arc").innerHTML = '<defs><clipPath id="ss-up"><rect x="0" y="0" width="300" height="' + H0 + '" /></clipPath></defs>' +
+        '<path d="' + d + '" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2.5" />' +
+        '<path d="' + d + '" fill="none" stroke="#fff" stroke-width="3" clip-path="url(#ss-up)" />' +
+        '<line x1="0" x2="300" y1="' + H0 + '" y2="' + H0 + '" stroke="rgba(255,255,255,0.45)" stroke-width="1.2" />' +
+        '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="11" fill="rgba(255,255,255,0.25)" />' +
+        '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="5.5" fill="#fff" />';
+    }
+
     function powerNote(cap, bat, t) {
       var base = "My WS90 outdoor sensor runs on a small solar panel that charges a capacitor, with AA batteries as backup. ";
       if (cap == null) return base.trim();
@@ -1916,6 +1966,8 @@
       paintHero(n.temp);
 
       $("w-speed").textContent = fmt(conv.speed(n.wind_speed), 1);
+      $("w-c-speed").textContent = fmt(conv.speed(n.wind_speed), 0);
+      $("w-c-unit").textContent = units === "us" ? "mph" : "km/h";
       $("w-gust").textContent = n.wind_gust == null ? "…" : fmt(conv.speed(n.wind_gust), 1) + (units === "us" ? " mph" : " km/h");
       var bf = beaufort(n.wind_speed);
       $("w-word").textContent = bf ? bf.name + " · Force " + bf.force : " ";
@@ -1983,10 +2035,12 @@
       $("s-word").textContent = uvWord(n.uvi);
       $("s-solar").textContent = fmt(n.solar);
       $("s-sky").textContent = skyWord(n.solar, data.observed);
-      var scale = $("uv-scale"), uv = Math.round(n.uvi || 0);
-      scale.innerHTML = UV_COLORS.map(function (c, i) {
-        return '<i style="background:' + c + '"' + (i === Math.min(uv, 11) ? ' class="on"' : "") + "></i>";
-      }).join("");
+      $("uv-dot").style.left = (Math.min(11, Math.max(0, n.uvi || 0)) / 11 * 100).toFixed(1) + "%";
+      // The WHO advice: protection from UV 3 up. Said for now only, since the
+      // station measures the sun, it doesn't forecast it.
+      $("s-advice").textContent = sunElevation(Date.now()) < 0 ? "The sun is down." :
+        (n.uvi || 0) >= 3 ? "Use sun protection now." : "No sun protection needed right now.";
+      drawSunset();
 
       drawCharts();
       renderHistory();
@@ -2033,15 +2087,15 @@
       var kind = storm ? "storm" : precip > 0 ? (snow ? "snow" : "rain") : fog ? "fog" : clouds > 0.7 ? "cloudy" : clouds > 0.25 ? "partly" : "clear";
       var look = night ? (kind === "rain" || kind === "storm" ? "night-rain" : kind === "clear" || kind === "partly" ? "night" : "night-cloudy") :
         dusk && (kind === "clear" || kind === "partly") ? "dusk" : kind;
-      // The page style: Auto follows the sky, Light and Dark hold.
-      var darkNow = theme === "dark" || (theme === "auto" && (night || storm)), seenNight = theme === "auto" ? night : theme === "dark";
-      look = seenNight ? (kind === "rain" || kind === "storm" ? "night-rain" : kind === "clear" || kind === "partly" ? "night" : "night-cloudy") :
-        theme === "auto" && dusk && (kind === "clear" || kind === "partly") ? "dusk" : kind;
+      // The page style: Auto follows the sky, Light and Dark hold for the
+      // cards. The background is always the real sky; Dark dims it by day
+      // (Stan, 7 Nov 2026: no stars at noon).
+      var darkNow = theme === "dark" || (theme === "auto" && (night || storm)), seenNight = night;
       document.body.classList.toggle("theme-dark", darkNow);
       document.body.setAttribute("data-sky", look);
       $("hero-sky").textContent = storm ? "Thunderstorm" : precip > 0 ? (snow ? "Snow" : precip < 0.3 ? "Light drizzle" : precip < 2.5 ? "Light rain" : precip < 7.6 ? "Rain" : "Heavy rain") :
         fog ? "Fog" : kind === "cloudy" ? (night ? "Cloudy night" : "Cloudy") : kind === "partly" ? (night ? "Some clouds" : "Partly cloudy") : night ? "Clear night" : "Clear";
-      document.body.classList.toggle("sky-dark", seenNight || kind === "storm");
+      document.body.classList.toggle("sky-dark", seenNight || kind === "storm" || darkNow);
       WX = { kind: kind, night: seenNight, rain: precip, snow: snow, clouds: precip > 0 || kind === "cloudy" ? Math.max(clouds, 0.85) : clouds,
         wind: n.wind_speed || 0, dir: n.wind_dir_avg10 != null ? n.wind_dir_avg10 : n.wind_dir != null ? n.wind_dir : 270, fog: fog, storm: storm };
       skyFx.update();
@@ -2058,7 +2112,7 @@
     var skyFx = (function () {
       var cv = $("sky-fx"), cx = cv.getContext("2d"), W = 0, H = 0, dpr = 1, raf = 0, last = 0;
       var still = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
-      var stars = [], clouds = [], streaks = [], drops = [], beads = [], flakes = [], splashes = [], edges = [], edgesAt = -9, flash = 0, nextFlash = 0, glint = null, nextGlint = 0;
+      var stars = [], clouds = [], wisps = [], sunAt = null, streaks = [], drops = [], beads = [], flakes = [], splashes = [], edges = [], edgesAt = -9, flash = 0, nextFlash = 0, glint = null, nextGlint = 0;
       var rnd = function (a, b) { return a + Math.random() * (b - a); };
       function size() {
         dpr = Math.min(window.devicePixelRatio || 1, 1.5); W = innerWidth; H = innerHeight;
@@ -2092,6 +2146,25 @@
         g.fillStyle = sh; g.fillRect(0, 0, w, h);
         return c;
       }
+      function wisp(w, h) {
+        var c = document.createElement("canvas"); c.width = Math.round(w); c.height = Math.round(h);
+        var g = c.getContext("2d"), tilt = rnd(-0.25, 0.25);
+        g.shadowColor = "rgba(255,255,255,0.9)"; g.shadowBlur = 10; g.lineCap = "round";
+        for (var i = 0; i < 46; i++) {
+          var y = h * rnd(0.2, 0.8), x0 = w * rnd(0, 0.3), x1 = w * rnd(0.6, 1);
+          g.strokeStyle = "rgba(255,255,255," + rnd(0.04, 0.12).toFixed(3) + ")"; g.lineWidth = rnd(1, 5);
+          g.beginPath(); g.moveTo(x0, y); g.quadraticCurveTo((x0 + x1) / 2, y + rnd(-h * 0.25, h * 0.25), x1, y + (x1 - x0) * tilt); g.stroke();
+        }
+        return c;
+      }
+      // The sun crosses the top of the screen from left (sunrise) to right
+      // (sunset), higher when it stands higher.
+      function sunPlace() {
+        var now = Date.now(), el = sunElevation(now);
+        if (WX.night || el < 1) return null;
+        var p = nyDate(new Date(now)), st = sunTimes(p.year, p.month, p.day), f = Math.max(0, Math.min(1, (now - st.rise) / (st.set - st.rise)));
+        return { x: W * (0.12 + 0.76 * f), y: H * (0.03 + 0.1 * (1 - Math.min(1, el / 45))) };
+      }
       function build() {
         var area = W * H / (1280 * 800), t = tones();
         // Most stars hold steady; about one in twelve, the brightest, twinkles
@@ -2108,6 +2181,12 @@
             a: (WX.night ? 0.75 : 0.9) * (0.55 + near * 0.45) });
         }
         clouds.sort(function (a, b) { return a.k - b.k; });
+        // Thin cirrus wisps on a clear or partly cloudy day, drifting slowly.
+        wisps = []; if (!WX.night && WX.rain === 0 && WX.clouds < 0.7) for (var q = 0; q < 3; q++) {
+          var ww = Math.max(W, 700) * rnd(0.45, 0.8), wh = ww * rnd(0.22, 0.32);
+          wisps.push({ img: wisp(ww, wh), w: ww, h: wh, x: rnd(-0.4, 1) * W, y: H * rnd(-0.05, 0.35), a: rnd(0.55, 0.9) });
+        }
+        sunAt = sunPlace();
         var rate = WX.rain, wet = rate > 0 && !WX.snow;
         heavy = Math.min(1, rate / 8);
         streaks = []; splashes = []; edgesAt = -9; if (wet) for (var k = 0; k < (rate < 0.3 ? 30 : 60 + heavy * 200) * area; k++) streaks.push(newStreak(true));
@@ -2157,12 +2236,35 @@
         var dt = last ? Math.min(0.05, (now - last) / 1000) : 0.016; last = now;
         cx.clearRect(0, 0, W, H);
         var t = now / 1000, dx = drift(), slant = dx * Math.min(0.5, WX.wind / 40);
-        if (!WX.night && WX.clouds < 0.7 && WX.rain === 0) {
-          var gr = cx.createRadialGradient(W * 0.85, H * 0.08, 0, W * 0.85, H * 0.08, Math.max(W, H) * 0.55);
-          var a = (0.5 - WX.clouds * 0.5) * (0.9 + 0.1 * Math.sin(t * 0.4));
-          gr.addColorStop(0, "rgba(255,244,200," + a + ")"); gr.addColorStop(0.35, "rgba(255,236,170," + a * 0.35 + ")"); gr.addColorStop(1, "rgba(255,236,170,0)");
+        // The sun as Apple draws it: a white core in a wide glow, a faint
+        // 22-degree halo with its colours, a few lens flares toward the middle.
+        if (sunAt && WX.clouds < 0.7 && WX.rain === 0) {
+          var sx = sunAt.x, sy = sunAt.y, a = Math.max(0, 1 - WX.clouds * 1.2) * (0.94 + 0.06 * Math.sin(t * 0.5));
+          var gr = cx.createRadialGradient(sx, sy, 0, sx, sy, Math.max(W, H) * 0.6);
+          gr.addColorStop(0, "rgba(255,255,255," + 0.45 * a + ")"); gr.addColorStop(0.25, "rgba(255,255,255," + 0.12 * a + ")"); gr.addColorStop(1, "rgba(255,255,255,0)");
           cx.fillStyle = gr; cx.fillRect(0, 0, W, H);
+          var core = cx.createRadialGradient(sx, sy, 0, sx, sy, 80);
+          core.addColorStop(0, "rgba(255,255,255," + a + ")"); core.addColorStop(0.18, "rgba(255,255,255," + 0.9 * a + ")");
+          core.addColorStop(0.45, "rgba(255,250,235," + 0.3 * a + ")"); core.addColorStop(1, "rgba(255,250,235,0)");
+          cx.fillStyle = core; cx.beginPath(); cx.arc(sx, sy, 80, 0, 6.2832); cx.fill();
+          var R = Math.min(W, H) * 0.34, ha = 0.09 * a, halo = cx.createRadialGradient(sx, sy, R - 30, sx, sy, R + 10);
+          halo.addColorStop(0, "rgba(255,255,255,0)"); halo.addColorStop(0.35, "rgba(255,110,90," + ha + ")"); halo.addColorStop(0.55, "rgba(255,225,110," + ha + ")");
+          halo.addColorStop(0.72, "rgba(120,220,150," + ha * 0.8 + ")"); halo.addColorStop(0.86, "rgba(110,160,255," + ha * 0.8 + ")"); halo.addColorStop(1, "rgba(110,160,255,0)");
+          cx.fillStyle = halo; cx.beginPath(); cx.arc(sx, sy, R + 10, 0, 6.2832); cx.fill();
+          var vx = W * 0.5 - sx, vy = H * 0.55 - sy;
+          [[0.42, 22], [0.6, 12], [0.85, 34]].forEach(function (fl) {
+            var fx = sx + vx * fl[0], fy = sy + vy * fl[0], fg2 = cx.createRadialGradient(fx, fy, 0, fx, fy, fl[1]);
+            fg2.addColorStop(0, "rgba(255,255,255," + 0.05 * a + ")"); fg2.addColorStop(0.8, "rgba(255,255,255," + 0.09 * a + ")"); fg2.addColorStop(1, "rgba(255,255,255,0)");
+            cx.fillStyle = fg2; cx.beginPath(); cx.arc(fx, fy, fl[1], 0, 6.2832); cx.fill();
+          });
         }
+        wisps.forEach(function (c) {
+          c.x += 6 * dx * dt;
+          if (dx > 0 && c.x > W + 20) c.x = -c.w - rnd(0, 200);
+          if (dx < 0 && c.x + c.w < -20) c.x = W + rnd(0, 200);
+          cx.globalAlpha = c.a; cx.drawImage(c.img, c.x, c.y, c.w, c.h);
+        });
+        cx.globalAlpha = 1;
         cx.fillStyle = "#fff";
         stars.forEach(function (s) {
           cx.globalAlpha = s.bright ? s.a * (0.6 + 0.4 * Math.sin(s.p + t * s.s * 6.2832)) : s.a;
@@ -2280,7 +2382,7 @@
       return {
         update: function () {
           var key = [WX.kind, WX.night, Math.round(WX.rain * 10), WX.snow, Math.round(WX.clouds * 10), WX.fog, WX.storm].join();
-          if (key !== built) { built = key; build(); }
+          if (key !== built) { built = key; build(); } else sunAt = sunPlace();
           if (!raf) start();
         },
         // For a look at another weather: skyPreview("rain", 3) in the console.
