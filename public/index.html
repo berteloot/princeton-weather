@@ -181,7 +181,10 @@
     .forecast { grid-column: span 12; --card: linear-gradient(135deg, #14112B 0%, #2A1A5E 55%, #4B2391 100%); color: #fff; display: grid; grid-template-columns: auto 1fr 1.1fr; gap: 1.6rem; align-items: center; }
     .forecast h2 { color: var(--sun); opacity: 1; margin-bottom: 0.3rem; }
     .fc-icon { width: 150px; height: 150px; } /* reserved, so the text does not move when the icon arrives */
-    .fc-icon svg { width: 100%; height: 100%; display: block; }
+    .fc-icon { display: flex; flex-direction: column; align-items: center; }
+    .fc-icon svg { width: 100%; height: 124px; display: block; }
+    .fc-cap { margin-top: 0.3rem; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--sun); white-space: nowrap; }
+    .fc-now { margin-top: 0.45rem; font-weight: 700; opacity: 0.9; }
     .fc-icon.blink svg { animation: blink 1s steps(2, start) infinite; }
     @keyframes blink { to { visibility: hidden; } }
     @media (prefers-reduced-motion: reduce) { .fc-icon.blink svg { animation: none; } }
@@ -621,8 +624,9 @@
       <section class="tile forecast">
         <div class="fc-icon" id="fc-icon"></div>
         <div>
-          <h2>Next 12 hours, by Zambretti</h2>
+          <h2>Forecast, next 12 hours, by Zambretti</h2>
           <div class="fc-state" id="fc-state">…</div>
+          <div class="fc-now" id="fc-now">&nbsp;</div>
           <p class="fc-sub">My station reads its own sea-level pressure, the 3-hour trend, the wind direction and the season, and picks one of the 26 Zambretti forecasts.</p>
           <div class="fc-facts">
             <div class="fc-fact"><span>3-hour change, daily tide removed</span><b id="fc-change">…</b></div>
@@ -1478,7 +1482,9 @@
       }
       var st = STATES[f.state] || STATES.partly;
       $("fc-state").textContent = f.text || st[0];
-      $("fc-icon").innerHTML = icon(st[1]);
+      // The icon is the forecast, labelled so, not the sky now (Stan, 7 Nov
+      // 2026: "Cloudy" in the hero over a big sun here).
+      $("fc-icon").innerHTML = icon(st[1]) + '<span class="fc-cap">Next 12 h</span>';
       // The storm icon blinks for the first 30 minutes of a stormy forecast.
       $("fc-icon").classList.toggle("blink", /storm/.test(f.state) && Boolean(f.since) && Date.now() / 1000 - f.since < 1800);
       var c = f.change3h_tide_free != null ? f.change3h_tide_free : f.change3h;
@@ -2098,8 +2104,10 @@
       var darkNow = theme === "dark" || (theme === "auto" && (night || storm)), seenNight = night;
       document.body.classList.toggle("theme-dark", darkNow);
       document.body.setAttribute("data-sky", look);
-      $("hero-sky").textContent = storm ? "Thunderstorm" : precip > 0 ? (snow ? "Snow" : precip < 0.3 ? "Light drizzle" : precip < 2.5 ? "Light rain" : precip < 7.6 ? "Rain" : "Heavy rain") :
+      var skyNow = storm ? "Thunderstorm" : precip > 0 ? (snow ? "Snow" : precip < 0.3 ? "Light drizzle" : precip < 2.5 ? "Light rain" : precip < 7.6 ? "Rain" : "Heavy rain") :
         fog ? "Fog" : kind === "cloudy" ? (night ? "Cloudy night" : "Cloudy") : kind === "partly" ? (night ? "Some clouds" : "Partly cloudy") : night ? "Clear night" : "Clear";
+      $("hero-sky").textContent = skyNow;
+      $("fc-now").textContent = "Right now: " + skyNow.toLowerCase() + ".";
       document.body.classList.toggle("sky-dark", seenNight || kind === "storm" || darkNow);
       WX = { kind: kind, night: seenNight, rain: precip, snow: snow, clouds: precip > 0 || kind === "cloudy" ? Math.max(clouds, 0.85) : clouds,
         wind: n.wind_speed || 0, dir: n.wind_dir_avg10 != null ? n.wind_dir_avg10 : n.wind_dir != null ? n.wind_dir : 270, fog: fog, storm: storm };
