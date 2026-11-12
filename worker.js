@@ -354,7 +354,37 @@ async function ingest(request, env, url) {
       ? env.DB.prepare("INSERT INTO meta (key, value) VALUES ('drizzle_from', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value").bind(String(drizzleFrom))
       : env.DB.prepare("UPDATE meta SET value = '0' WHERE key = 'drizzle_from' AND value <> '0'"),
   ]);
+  // The latest lightning strike, apart from the reading, so a station
+  // without the strikes table (migration 0007) or a lightning sensor still
+  // saves its readings.
+  const strike = strikeStatement(env, form, now);
+  if (strike) await strike.run().catch((err) => console.error("strike save failed", String(err)));
   return new Response("OK");
+}
+
+// The console's newest strike (fields lightning in km, lightning_time,
+// lightning_num), kept once per strike time; n is the rise in the day's
+// count since the day's previous row, so two strikes in one minute make one
+// row with n = 2. Null when the upload has no strike.
+function strikeStatement(env, form, now) {
+  const at = Number(form.lightning_time), km = Number(form.lightning), count = Number(form.lightning_num);
+  if (!Number.isFinite(at) || at < now - 2 * 86400 || at > now + 300 || form.lightning == null || form.lightning === "" || !Number.isFinite(km)) return null;
+  const day = nyTime(new Date(at * 1000)).slice(0, 10);
+  return env.DB.prepare(`INSERT OR IGNORE INTO strikes (t, day, distance_km, count_day, n)
+      SELECT ?, ?, ?, ?, MAX(1, ? - COALESCE((SELECT count_day FROM strikes WHERE day = ? ORDER BY t DESC LIMIT 1), 0))`)
+    .bind(Math.floor(at), day, Math.round(km * 10) / 10, Number.isFinite(count) ? count : null, Number.isFinite(count) ? count : 1, day);
+}
+
+// The last 6 hours of strikes as [t, km, n] for the lightning card's approach
+// chart, or null (no strikes table yet).
+async function recentStrikes(env) {
+  if (!env.DB) return null;
+  try {
+    const r = await env.DB.prepare("SELECT t, distance_km, n FROM strikes WHERE t >= ? ORDER BY t").bind(Math.floor(Date.now() / 1000) - 6 * 3600).all();
+    return { recent: r.results.map((x) => [x.t, x.distance_km, x.n]) };
+  } catch {
+    return null;
+  }
 }
 
 // The newest console upload as page fields, or null when there is none
@@ -399,15 +429,15 @@ async function latestPush(env) {
 async function serveWeather(env, ctx, url, cors) {
   const cache = caches.default;
   const key = new Request(url.origin + "/api/weather", { method: "GET" });
-  const [hit, push] = await Promise.all([cache.match(key), latestPush(env)]);
+  const [hit, push, lt] = await Promise.all([cache.match(key), latestPush(env), recentStrikes(env)]);
   const age = hit ? Date.now() / 1000 - Number(hit.headers.get("x-fetched-at") || 0) : Infinity;
   if (hit && (push || age <= STALE_SECONDS)) {
     if (age > (push ? PUSH_REFRESH_SECONDS : CACHE_SECONDS)) ctx.waitUntil(refresh(env, cache, key).catch((err) => console.error("refresh failed", String(err))));
-    return client(await overlay(hit, push), cors);
+    return client(await overlay(hit, push, lt), cors);
   }
 
   try {
-    return client(await overlay(await refresh(env, cache, key), push), cors);
+    return client(await overlay(await refresh(env, cache, key), push, lt), cors);
   } catch (err) {
     console.error("weather failed", String(err));
     return withCors(json({ error: "station unavailable" }, 502, 15), cors);

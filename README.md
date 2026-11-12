@@ -11,8 +11,12 @@ This repository holds the code behind my Princeton weather page, live at [altile
   - `/api/ingest/<token>` receives the readings the console pushes itself every minute (see below). While those arrive, `/api/weather` shows them instead of the slower Ecowitt cloud reading.
   - `scheduled()` runs every hour and copies the station's 5-minute history into D1.
 - `zambretti.js`: the Zambretti forecaster (Negretti & Zambra, 1915) in beteljuice's electronic form, plus my own removal of the daily pressure cycle before the 3-hour trend is judged (see below).
-- `migrations/`: the D1 schema (`readings`, `days`, `meta`, `minutes`).
+- `migrations/`: the D1 schema (`readings`, `days`, `meta`, `minutes`, `strikes`).
 - `wrangler.example.jsonc`: the Worker configuration, with placeholders.
+
+## Lightning approach chart
+
+With an Ecowitt WH57 lightning sensor and console pushes turned on (see below), the Worker saves each strike the console reports to the `strikes` table, and `/api/weather` adds the last 6 hours of them to the lightning group. From the third strike of a storm, the lightning card widens and plots the strikes over time against distance from the station, with the 16 km (10 mile) zone, the 30 minutes to wait after the last strike, and a trend line over the last 15 minutes. The sensor gives distance only, not direction. Without console pushes, the card shows the latest strike and the day's count only.
 
 The radar layer is the NEXRAD base reflectivity mosaic from the [Iowa Environmental Mesonet](https://mesonet.agron.iastate.edu/). Map tiles are © OpenStreetMap contributors.
 
